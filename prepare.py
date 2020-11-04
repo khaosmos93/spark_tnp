@@ -142,6 +142,14 @@ def getSF_cutAndCount(binName, fnameData, fnameMC, shift=None):
         sf_err = sf * ((dataErr / dataEff)**2 + (mcErr / mcEff)**2)**0.5
     return sf, sf_err, dataEff, dataErr, mcEff, mcErr
 
+def getSF_fitBoth(binName, fnameData, fnameMC, shift=None):
+    mcEff, mcErr = getDataEff(binName, fnameMC, shift)
+    dataEff, dataErr = getDataEff(binName, fnameData, shift)
+    sf = dataEff / mcEff if mcEff else 0.0
+    sf_err = 0.0
+    if dataEff and mcEff:
+        sf_err = sf * ((dataErr / dataEff)**2 + (mcErr / mcEff)**2)**0.5
+    return sf, sf_err, dataEff, dataErr, mcEff, mcErr
 
 def getSyst(binName, fname, fitTypes, shiftTypes):
     sf, sf_err, dataEff, dataErr, mcEff, mcErr = getSF(binName, fname)
@@ -266,10 +274,73 @@ def getSyst_cutAndCount(binName, fnameData, fnameMC, fitTypes, shiftTypes):
 
     return syst
 
+def getSyst_fitBoth(binName, fnameData, fnameMC, fitTypes, shiftTypes):
+    sf, sf_err, dataEff, dataErr, mcEff, mcErr = getSF_fitBoth(
+        binName, fnameData, fnameMC)
+
+    syst = {}
+    for isyst in fitTypes:
+        systfnameData = fnameData.replace('Nominal', isyst)
+        systfnameMC = fnameMC.replace('Nominal', isyst)
+        # sf, sf_err, dataEff, dataErr, mcEff, mcErr
+        tmp = getSF_fitBoth(binName, systfnameData, systfnameMC, isyst)
+        syst[isyst] = {
+            'sf': tmp[0],
+            'err': abs(tmp[0]-sf),
+            'dataEff': tmp[2],
+            'dataErr': abs(tmp[2]-dataEff),
+            'mcEff': tmp[4],
+            'mcErr': abs(tmp[4]-mcEff),
+        }
+
+    for isyst in shiftTypes:
+        systUpfnameData = fnameData.replace('Nominal', isyst+'Up')
+        systDnfnameData = fnameData.replace('Nominal', isyst+'Down')
+        systUpfnameMC = fnameMC.replace('Nominal', isyst+'Up')
+        systDnfnameMC = fnameMC.replace('Nominal', isyst+'Down')
+        # sf, sf_err, dataEff, dataErr, mcEff, mcErr
+        tmpUp = getSF_fitBoth(binName, systUpfnameData,
+                                  systUpfnameMC, isyst+'Up')
+        tmpDn = getSF_fitBoth(binName, systDnfnameData,
+                                  systDnfnameMC, isyst+'Down')
+        tmp = [
+            (tmpUp[0]+tmpDn[0])/2,
+            (abs(tmpUp[0]-sf)+abs(tmpDn[0]-sf))/2,
+            (tmpUp[2]+tmpDn[2])/2,
+            (abs(tmpUp[2]-dataEff)+abs(tmpDn[2]-dataEff))/2,
+            (tmpUp[4]+tmpDn[4])/2,
+            (abs(tmpUp[4]-mcEff)+abs(tmpDn[4]-mcEff))/2,
+        ]
+        syst[isyst] = {
+            'sf': tmp[0],
+            'err': tmp[1],
+            'dataEff': tmp[2],
+            'dataErr': tmp[3],
+            'mcEff': tmp[4],
+            'mcErr': tmp[5],
+        }
+        syst[isyst+'Up'] = {
+            'sf': tmpUp[0],
+            'err': abs(tmpUp[0]-sf),
+            'dataEff': tmpUp[2],
+            'dataErr': abs(tmpUp[2]-dataEff),
+            'mcEff': tmpUp[4],
+            'mcErr': abs(tmpUp[4]-mcEff),
+        }
+        syst[isyst+'Down'] = {
+            'sf': tmpDn[0],
+            'err': abs(tmpDn[0]-sf),
+            'dataEff': tmpDn[2],
+            'dataErr': abs(tmpDn[2]-dataEff),
+            'mcEff': tmpDn[4],
+            'mcErr': abs(tmpDn[4]-mcEff),
+        }
+
+    return syst
 
 def prepare(baseDir, particle, probe, resonance, era,
             config, num, denom, variableLabels,
-            skipPlots=False, cutAndCount=False):
+            skipPlots=False, cutAndCount=False, fitBoth=False):
 
     subEra = era.split('_')[0]  # data subera is beginning of era
     lumi = registry.luminosity(particle, probe, resonance, era, subEra)
@@ -407,6 +478,11 @@ def prepare(baseDir, particle, probe, resonance, era,
                                     resonance, era,
                                     dataSubEra, 'Nominal',
                                     extEffName + '.root')
+        mcFNameFit = os.path.join(baseDir, 'fits_mc',
+                                    particle, probe,
+                                    resonance, era,
+                                    fitType, effName,
+                                    binName + '.root')
         mcFNameCNC = os.path.join(baseDir, 'flat',
                                   particle, probe,
                                   resonance, era,
@@ -415,9 +491,13 @@ def prepare(baseDir, particle, probe, resonance, era,
         if cutAndCount:
             sf, sf_stat, dataEff, dataStat, mcEff, mcStat = getSF_cutAndCount(
                 binName, dataFNameCNC, mcFNameCNC)
+        elif fitBoth:
+            sf, sf_stat, dataEff, dataStat, mcEff, mcStat = getSF_fitBoth(
+                binName, dataFNameFit, mcFNameFit)
         else:
             sf, sf_stat, dataEff, dataStat, mcEff, mcStat = getSF(
                 binName, dataFNameFit)
+
         fitTypes = set(systList['SF']['fitTypes']
                        + systList['dataEff']['fitTypes']
                        + systList['mcEff']['fitTypes'])
@@ -427,6 +507,9 @@ def prepare(baseDir, particle, probe, resonance, era,
         if cutAndCount:
             sf_syst = getSyst_cutAndCount(binName, dataFNameCNC, mcFNameCNC,
                                           fitTypes, shiftTypes)
+        elif fitBoth:
+            sf_syst = getSyst_fitBoth(binName, dataFNameFit, mcFNameFit,
+                                      fitTypes, shiftTypes)
         else:
             sf_syst = getSyst(binName, dataFNameFit,
                               fitTypes, shiftTypes)
@@ -618,7 +701,8 @@ def prepare(baseDir, particle, probe, resonance, era,
         if xRange:
             mg.GetXaxis().SetRangeUser(*xRange)
         mg.GetYaxis().SetTitle(ylabel)
-        mg.GetYaxis().SetRangeUser(0.8, 1.10)
+        mg.GetYaxis().SetRangeUser(0.6, 1.20)  # Trigger
+        # mg.GetYaxis().SetRangeUser(0.8, 1.10)
         legend = ROOT.TLegend(0.5, 0.70, 0.92, 0.92)
         legend.SetTextFont(42)
         legend.SetBorderSize(0)

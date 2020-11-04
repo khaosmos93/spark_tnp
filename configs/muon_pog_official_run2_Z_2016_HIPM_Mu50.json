@@ -3,7 +3,7 @@
         ["Mu50_OR_TkMu50", "NewHighPtID_and_RelTrkIso_010"],
         ["Mu50_OR_TkMu50", "L1SingleMu22_and_NewHighPtID_and_RelTrkIso_010"]
     ],
-    "selection": "DeltaPhi70 and tag_IsoMu24==1 and tag_pt > 25.9 and tag_abseta<2.4 and pair_deltaR > 0.3 and mass > 69.5 and mass < 130.5",
+    "selection": "DeltaPhi70 and tag_IsoMu24==1 and tag_pt > 25.9 and tag_abseta<2.4 and pair_deltaR > 0.3 and mass > 55.0 and mass < 145.0",
     "definitions": {
         "DeltaPhi70": "( ( ( (tag_eta < -0.9 and eta < -0.9) or (tag_eta > 0.9 and eta > 0.9) ) and abs(tag_phi - phi) > 1.22173 ) or ( not ( (tag_eta < -0.9 and eta < -0.9) or (tag_eta > 0.9 and eta > 0.9) ) ) )",
         "NewHighPtID_and_RelTrkIso_010": "CutBasedIdGlobalHighPt_new > 0.5 and relTkIso < 0.10",

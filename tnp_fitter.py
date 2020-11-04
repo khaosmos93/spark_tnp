@@ -103,6 +103,8 @@ def add_common_prepare(parser):
                         help='Skip efficiency plots')
     parser.add_argument('--cutAndCount', action='store_true',
                         help='Use cut and count rather than fits')
+    parser.add_argument('--fitBoth', action='store_true',
+                        help='Use fits for both data and mc')
 
 
 def add_common_particle(parser):
@@ -262,7 +264,7 @@ def main(argv=None):
             denominator=args.denominator,
             baseDir=baseDir,
         )
-        jobs = [job + [args.skipPlots, args.cutAndCount] for job in jobs]
+        jobs = [job + [args.skipPlots, args.cutAndCount, args.fitBoth] for job in jobs]
         unit = 'efficiency'
         desc = 'Preparing'
 

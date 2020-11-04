@@ -3,7 +3,7 @@
         ["IsoMu24_OR_IsoTkMu24", "Tight2012_and_dBeta_015"],
         ["IsoMu24_OR_IsoTkMu24", "L1SingleMu22_and_Tight2012_and_dBeta_015"]
     ],
-    "selection": "tag_IsoMu24==1 and tag_pt > 25.9 and tag_abseta<2.4 and pair_deltaR > 0.3 and mass > 69.5 and mass < 130.5",
+    "selection": "tag_IsoMu24==1 and tag_pt > 25.9 and tag_abseta<2.4 and pair_deltaR > 0.3 and mass > 55.0 and mass < 145.0",
     "definitions": {
         "Tight2012_and_dBeta_015": "Tight2012 == 1 and combRelIsoPF04dBeta < 0.15",
         "L1SingleMu22_and_Tight2012_and_dBeta_015": "Tight2012 == 1 and combRelIsoPF04dBeta < 0.15 and l1ptByQ >= 22 and l1qByQ == 12 and l1drByQ < 0.3",
