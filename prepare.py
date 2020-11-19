@@ -675,7 +675,7 @@ def prepare(baseDir, particle, probe, resonance, era,
             array('d', yvals_err),
             array('d', yvals_err),
         )
-        graph.SetName(hist.GetName())
+        graph.SetName('g_'+hist.GetName())
         return graph
 
     # plot the efficiencies
