@@ -675,7 +675,6 @@ def prepare(baseDir, particle, probe, resonance, era,
             array('d', yvals_err),
             array('d', yvals_err),
         )
-        graph.SetName('g_'+hist.GetName())
         return graph
 
     # plot the efficiencies
@@ -738,7 +737,8 @@ def prepare(baseDir, particle, probe, resonance, era,
 
         tfile = ROOT.TFile('{}.root'.format(savename), 'update')
         for gi in range(ng):
-            graphs[gi].Write()
+            graphs[gi].SetTitle(labels[gi])
+            graphs[gi].Write('g'+str(gi))
         tfile.Close()
 
     # enumerate over the axis/variable to plot
