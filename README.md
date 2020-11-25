@@ -189,9 +189,11 @@ To run locally (with 16 threads):
 
 To submit to condor:
 ```bash
-./tnp_fitter.py fit muon generalTracks Z Run2017_UL configs/muon_pog_official_run2_Z_2017.json --condor
-condor_submit condor.sub
+$ ./tnp_fitter.py fit muon generalTracks Z Run2017_UL configs/muon_pog_official_run2_Z_2017.json --condor
+$ condor_submit condor.sub
 ```
+
+**Note:** CERN no longer allows condor jobs referencing eos mountpoints (see [here](https://batchdocs.web.cern.ch/troubleshooting/eos.html#no-eos-submission-allowed)). This means it's not possible to submit the jobs from the repository cloned on a SWAN instance, since SWAN projects are kept at `/eos/user/S/SOMEUSER/SWAN_projects`. So if you've cloned this repo into a SWAN area, make sure to copy the repo elsewhere first before submitting condor jobs (e.g. afs user or work area).
 
 The histograms which are fit can be controlled with optional filters.
 See documentation with:
