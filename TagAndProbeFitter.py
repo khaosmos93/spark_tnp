@@ -7,13 +7,26 @@ tdrstyle.setTDRStyle()
 
 class TagAndProbeFitter:
 
-    def __init__(self, name):
+    def __init__(self, name, resonance='Z'):
         self._name = name
         self._w = ROOT.RooWorkspace('w')
         self._useMinos = True
+        self._hists = {}
+        self._resonance = resonance
+        if resonance == 'Z':
+            self._peak = 90
+            self._fit_var_min = 60
+            self._fit_var_max = 140
+            self._fit_range_min = 70
+            self._fit_range_max = 130
+        elif resonance == 'JPsi':
+            self._peak = 3.10
+            self._fit_var_min = 2.80
+            self._fit_var_max = 3.40
+            self._fit_range_min = 2.90
+            self._fit_range_max = 3.30
         self.set_fit_var()
         self.set_fit_range()
-        self._hists = {}
 
     def wsimport(self, *args):
         # getattr since import is special in python
@@ -23,8 +36,13 @@ class TagAndProbeFitter:
             args += (ROOT.RooCmdArg(), )
         return getattr(self._w, 'import')(*args)
 
-    def set_fit_var(self, v='x', vMin=60, vMax=140,
+    def set_fit_var(self, v='x', vMin=None, vMax=None,
                     unit='GeV', label='m(#mu#mu)'):
+        if vMin is None:
+            vMin = self._fit_var_min
+        if vMax is None:
+            vMax = self._fit_var_max
+            
         self._fitVar = v
         self._fitVarMin = vMin
         self._fitVarMax = vMax
@@ -35,11 +53,15 @@ class TagAndProbeFitter:
             self._w.var(v).setPlotLabel(label)
             self._w.var(v).SetTitle(label)
 
-    def set_fit_range(self, fMin=70, fMax=130):
-        self._fitRangeMin = fMin
-        self._fitRangeMax = fMax
+    def set_fit_range(self, fMin=None, fMax=None):
+        if fMin is None:
+            self._fitRangeMin = self._fit_range_min
+        if fMax is None:
+            self._fitRangeMax = self._fit_range_max
 
-    def set_histograms(self, hPass, hFail, peak=90):
+    def set_histograms(self, hPass, hFail, peak=None):
+        if peak is None:
+            peak = self._peak
         self._hists['Pass'] = hPass.Clone()
         self._hists['Fail'] = hFail.Clone()
         self._hists['Pass'].SetDirectory(ROOT.gROOT)
@@ -60,7 +82,9 @@ class TagAndProbeFitter:
         self.wsimport(dhPass)
         self.wsimport(dhFail)
 
-    def set_gen_shapes(self, hPass, hFail, peak=90):
+    def set_gen_shapes(self, hPass, hFail, peak=None):
+        if peak is None:
+            peak = self._peak
         self._hists['GenPass'] = hPass.Clone()
         self._hists['GenFail'] = hFail.Clone()
         self._hists['GenPass'].SetDirectory(ROOT.gROOT)

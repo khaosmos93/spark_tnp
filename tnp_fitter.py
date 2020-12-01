@@ -10,7 +10,9 @@ try:
 except ImportError:
     hasTQDM = False
 
-from muon_definitions import get_allowed_resonances, get_allowed_eras
+from dataset_allowed_definitions import (get_allowed_resonances, 
+                                         get_allowed_eras,
+                                         get_allowed_sub_eras)
 from config import Configuration
 
 
@@ -109,7 +111,7 @@ def add_common_particle(parser):
 
 
 def add_common_probe(parser):
-    parser.add_argument('probe', choices=['generalTracks', 'standAloneMuons'],
+    parser.add_argument('probe', choices=['generalTracks', 'standAloneMuons', 'dSAMuons'],
                         help='Probe for scalefactors')
 
 
@@ -128,6 +130,17 @@ def add_common_era(parser):
     parser.add_argument('era', choices=allowed,
                         help='Scale factor set to produce')
 
+def add_common_sub_era(parser):
+    a_rs = get_allowed_resonances()
+    a_sub = []
+    for r in a_rs:
+        a_es = get_allowed_eras(r)
+        for e in a_es:
+            a_sub += get_allowed_sub_eras(r, e)
+    a_sub = sorted(set(a_sub))
+    
+    parser.add_argument('subEra', nargs='?', choices=a_sub,
+                        help='Sub-era if desired')
 
 def add_common_config(parser):
     parser.add_argument('config',
@@ -143,6 +156,7 @@ def parse_command_line(argv):
     parser = argparse.ArgumentParser(description='TnP Fitter')
 
     subparsers = parser.add_subparsers(help='Fitting step', dest='command')
+    subparsers.required = True
 
     parser_convert = subparsers.add_parser(
         'convert',
@@ -152,6 +166,7 @@ def parse_command_line(argv):
     add_common_probe(parser_convert)
     add_common_resonance(parser_convert)
     add_common_era(parser_convert)
+    add_common_sub_era(parser_convert)
     add_common_options(parser_convert)
 
     parser_flatten = subparsers.add_parser(
@@ -221,7 +236,9 @@ def main(argv=None):
         )
 
     if args.command == 'convert':
-        raise NotImplementedError
+        from converter import run_all
+        run_all(args.particle, args.probe, args.resonance, args.era, args.subEra)
+        return 0
     elif args.command == 'flatten':
         from flattener import run_spark
         run_spark(args.particle, args.probe, args.resonance, args.era,
@@ -317,6 +334,7 @@ def main(argv=None):
                     add_fn(output, result)
         else:
             for job in jobs:
+                print(f'Submitting job: {job}')
                 result = job_fn(*job)
                 if add_fn is not None:
                     add_fn(output, result)
