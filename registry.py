@@ -36,7 +36,7 @@ class Registry:
 
     def root(self, particle, probe, resonance, era, subEra):
         df = self._reduce(particle, probe, resonance, era, subEra)
-        globs = itertools.chain.from_iterable(df.parquet.values)
+        globs = itertools.chain.from_iterable(df.root.values)
         return itertools.chain.from_iterable((glob.glob(g) for g in globs))
 
     def treename(self, particle, probe, resonance, era, subEra):
@@ -60,6 +60,12 @@ _jsons = [
     'data/registry_muon_JPsi_generalTracks.json',
     # Muon POG standAloneMuon probes
     'data/registry_muon_Z_standAloneMuons.json',
+    # Muon POG displacedStandAloneMuon probes
+    'data/registry_muon_Z_DisplacedID_dSA_probes.json',
+    'data/registry_muon_JPsi_DisplacedID_dSA_probes.json',
+    # 'data/registry_muon_Z_dSA_genTrack_probes.json', # currently conflicts with first entry
+    # dSA studies
+    'data/registry_muon_Z_dSA_dRStudy.json'
 ]
 
 for fname in _jsons:
