@@ -9,8 +9,8 @@ import ROOT
 import tdrstyle
 import CMS_lumi
 
-from muon_definitions import (get_data_mc_sub_eras,
-                              get_full_name, get_eff_name,
+from dataset_allowed_definitions import get_data_mc_sub_eras
+from muon_definitions import (get_full_name, get_eff_name,
                               get_bin_name,
                               get_extended_eff_name,
                               get_variables_name)
@@ -28,7 +28,7 @@ def computeEff(n1, n2, e1, e2):
     return eff, err
 
 
-def getEff(binName, fname, shift=None, cutAndCount=False):
+def getEff(binName, fname, shift=None, cutAndCount=False, resonance='Z'):
     try:
         # MC Eff is always cut and count now
         tfile = ROOT.TFile(fname, 'read')
@@ -39,12 +39,21 @@ def getEff(binName, fname, shift=None, cutAndCount=False):
             hP = tfile.Get('{}_GenPass'.format(binName))
             hF = tfile.Get('{}_GenFail'.format(binName))
         # hard code Z for now (same as in run_single_fit.py)
-        if shift == 'massRangUp':
-            blow, bhigh = 75, 135
-        elif shift == 'massRangeDown':
-            blow, bhigh = 65, 125
+        # AF: TODO make the Z vs JPsi treatment less hacky perhaps
+        if resonance == 'JPsi':
+            if shift == 'massRangeUp':
+                blow, bhigh = 2.96, 3.36
+            elif shift == 'massRangeDown':
+                blow, bhigh = 2.84, 3.24
+            else:
+                blow, bhigh = 2.90, 3.30
         else:
-            blow, bhigh = 70, 130
+            if shift == 'massRangeUp':
+                blow, bhigh = 75, 135
+            elif shift == 'massRangeDown':
+                blow, bhigh = 65, 125
+            else:
+                blow, bhigh = 70, 130
         bin1 = hP.GetXaxis().FindBin(blow)
         bin2 = hP.GetXaxis().FindBin(bhigh)
         eP = ctypes.c_double(-1.0)
@@ -61,19 +70,28 @@ def getEff(binName, fname, shift=None, cutAndCount=False):
         return 1., 0.
 
 
-def getDataEff(binName, fname, shift=None, cutAndCount=False):
+def getDataEff(binName, fname, shift=None, cutAndCount=False, resonance='Z'):
     try:
         tfile = ROOT.TFile(fname, 'read')
         if cutAndCount:
             hP = tfile.Get('{}_Pass'.format(binName))
             hF = tfile.Get('{}_Fail'.format(binName))
             # hard code Z for now (same as in run_single_fit.py)
-            if shift == 'massRangUp':
-                blow, bhigh = 75, 135
-            elif shift == 'massRangeDown':
-                blow, bhigh = 65, 125
-            else:
-                blow, bhigh = 70, 130
+            # AF: TODO make the Z vs JPsi treatment less hacky perhaps
+           if resonance == 'JPsi':
+               if shift == 'massRangeUp':
+                   blow, bhigh = 2.96, 3.36
+               elif shift == 'massRangeDown':
+                   blow, bhigh = 2.84, 3.24
+               else:
+                   blow, bhigh = 2.90, 3.30
+           else:
+               if shift == 'massRangeUp':
+                   blow, bhigh = 75, 135
+               elif shift == 'massRangeDown':
+                   blow, bhigh = 65, 125
+               else:
+                   blow, bhigh = 70, 130
             bin1 = hP.GetXaxis().FindBin(blow)
             bin2 = hP.GetXaxis().FindBin(bhigh)
             eP = ctypes.c_double(-1.0)
@@ -96,12 +114,21 @@ def getDataEff(binName, fname, shift=None, cutAndCount=False):
             hP = tfile.Get('{}_Pass'.format(binName))
             hF = tfile.Get('{}_Fail'.format(binName))
             # hard code Z for now (same as in run_single_fit.py)
-            if shift == 'massRangUp':
-                blow, bhigh = 75, 135
-            elif shift == 'massRangeDown':
-                blow, bhigh = 65, 125
+            # AF: TODO make the Z vs JPsi treatment less hacky perhaps
+            if resonance == 'JPsi':
+                if shift == 'massRangeUp':
+                    blow, bhigh = 2.96, 3.36
+                elif shift == 'massRangeDown':
+                    blow, bhigh = 2.84, 3.24
+                else:
+                    blow, bhigh = 2.90, 3.30
             else:
-                blow, bhigh = 70, 130
+                if shift == 'massRangeUp':
+                    blow, bhigh = 75, 135
+                elif shift == 'massRangeDown':
+                    blow, bhigh = 65, 125
+                else:
+                    blow, bhigh = 70, 130
             bin1 = hP.GetXaxis().FindBin(blow)
             bin2 = hP.GetXaxis().FindBin(bhigh)
             ePalt = ctypes.c_double(-1.0)
@@ -123,9 +150,9 @@ def getDataEff(binName, fname, shift=None, cutAndCount=False):
         return 1., 0.
 
 
-def getSF(binName, fname, shift=None):
-    mcEff, mcErr = getEff(binName, fname, shift)
-    dataEff, dataErr = getDataEff(binName, fname, shift)
+def getSF(binName, fname, shift=None, resonance='Z'):
+    mcEff, mcErr = getEff(binName, fname, shift, False, resonance)
+    dataEff, dataErr = getDataEff(binName, fname, shift, False, resonance)
     sf = dataEff / mcEff if mcEff else 0.0
     sf_err = 0.0
     if dataEff and mcEff:
@@ -133,9 +160,9 @@ def getSF(binName, fname, shift=None):
     return sf, sf_err, dataEff, dataErr, mcEff, mcErr
 
 
-def getSF_cutAndCount(binName, fnameData, fnameMC, shift=None):
-    mcEff, mcErr = getEff(binName, fnameMC, shift, True)
-    dataEff, dataErr = getDataEff(binName, fnameData, shift, True)
+def getSF_cutAndCount(binName, fnameData, fnameMC, shift=None, resonance='Z'):
+    mcEff, mcErr = getEff(binName, fnameMC, shift, True, resonance)
+    dataEff, dataErr = getDataEff(binName, fnameData, shift, True, resonance)
     sf = dataEff / mcEff if mcEff else 0.0
     sf_err = 0.0
     if dataEff and mcEff:
@@ -143,14 +170,14 @@ def getSF_cutAndCount(binName, fnameData, fnameMC, shift=None):
     return sf, sf_err, dataEff, dataErr, mcEff, mcErr
 
 
-def getSyst(binName, fname, fitTypes, shiftTypes):
-    sf, sf_err, dataEff, dataErr, mcEff, mcErr = getSF(binName, fname)
+def getSyst(binName, fname, fitTypes, shiftTypes, resonance='Z'):
+    sf, sf_err, dataEff, dataErr, mcEff, mcErr = getSF(binName, fname, resonance=resonance)
 
     syst = {}
     for isyst in fitTypes:
         systfname = fname.replace('Nominal', isyst)
         # sf, sf_err, dataEff, dataErr, mcEff, mcErr
-        tmp = getSF(binName, systfname, isyst)
+        tmp = getSF(binName, systfname, isyst, resonance=resonance)
         syst[isyst] = {
             'sf': tmp[0],
             'err': abs(tmp[0]-sf),
@@ -164,8 +191,8 @@ def getSyst(binName, fname, fitTypes, shiftTypes):
         systUpfname = fname.replace('Nominal', isyst+'Up')
         systDnfname = fname.replace('Nominal', isyst+'Down')
         # sf, sf_err, dataEff, dataErr, mcEff, mcErr
-        tmpUp = getSF(binName, systUpfname, isyst+'Up')
-        tmpDn = getSF(binName, systDnfname, isyst+'Down')
+        tmpUp = getSF(binName, systUpfname, isyst+'Up', resonance=resonance)
+        tmpDn = getSF(binName, systDnfname, isyst+'Down', resonance=resonance)
         tmp = [
             (tmpUp[0]+tmpDn[0])/2,
             (abs(tmpUp[0]-sf)+abs(tmpDn[0]-sf))/2,
@@ -202,16 +229,16 @@ def getSyst(binName, fname, fitTypes, shiftTypes):
     return syst
 
 
-def getSyst_cutAndCount(binName, fnameData, fnameMC, fitTypes, shiftTypes):
+def getSyst_cutAndCount(binName, fnameData, fnameMC, fitTypes, shiftTypes, resonance='Z'):
     sf, sf_err, dataEff, dataErr, mcEff, mcErr = getSF_cutAndCount(
-        binName, fnameData, fnameMC)
+        binName, fnameData, fnameMC, resonance=resonance)
 
     syst = {}
     for isyst in fitTypes:
         systfnameData = fnameData.replace('Nominal', isyst)
         systfnameMC = fnameMC.replace('Nominal', isyst)
         # sf, sf_err, dataEff, dataErr, mcEff, mcErr
-        tmp = getSF_cutAndCount(binName, systfnameData, systfnameMC, isyst)
+        tmp = getSF_cutAndCount(binName, systfnameData, systfnameMC, isyst, resonance=resonance)
         syst[isyst] = {
             'sf': tmp[0],
             'err': abs(tmp[0]-sf),
@@ -228,9 +255,9 @@ def getSyst_cutAndCount(binName, fnameData, fnameMC, fitTypes, shiftTypes):
         systDnfnameMC = fnameMC.replace('Nominal', isyst+'Down')
         # sf, sf_err, dataEff, dataErr, mcEff, mcErr
         tmpUp = getSF_cutAndCount(binName, systUpfnameData,
-                                  systUpfnameMC, isyst+'Up')
+                                  systUpfnameMC, isyst+'Up', resonance=resonance)
         tmpDn = getSF_cutAndCount(binName, systDnfnameData,
-                                  systDnfnameMC, isyst+'Down')
+                                  systDnfnameMC, isyst+'Down', resonance=resonance)
         tmp = [
             (tmpUp[0]+tmpDn[0])/2,
             (abs(tmpUp[0]-sf)+abs(tmpDn[0]-sf))/2,
@@ -414,10 +441,10 @@ def prepare(baseDir, particle, probe, resonance, era,
                                   extEffName + '.root')
         if cutAndCount:
             sf, sf_stat, dataEff, dataStat, mcEff, mcStat = getSF_cutAndCount(
-                binName, dataFNameCNC, mcFNameCNC)
+                binName, dataFNameCNC, mcFNameCNC, resonance=resonance)
         else:
             sf, sf_stat, dataEff, dataStat, mcEff, mcStat = getSF(
-                binName, dataFNameFit)
+                binName, dataFNameFit, resonance=resonance)
         fitTypes = set(systList['SF']['fitTypes']
                        + systList['dataEff']['fitTypes']
                        + systList['mcEff']['fitTypes'])
@@ -426,10 +453,10 @@ def prepare(baseDir, particle, probe, resonance, era,
                          + systList['mcEff']['shiftTypes'])
         if cutAndCount:
             sf_syst = getSyst_cutAndCount(binName, dataFNameCNC, mcFNameCNC,
-                                          fitTypes, shiftTypes)
+                                          fitTypes, shiftTypes, resonance=resonance)
         else:
             sf_syst = getSyst(binName, dataFNameFit,
-                              fitTypes, shiftTypes)
+                              fitTypes, shiftTypes, resonance=resonance)
 
         combined_syst = {}
         for kind in ['SF', 'dataEff', 'mcEff']:

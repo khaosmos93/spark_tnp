@@ -4,8 +4,8 @@ import subprocess
 import itertools
 import math
 
-from muon_definitions import (get_data_mc_sub_eras,
-                              get_full_name, get_eff_name,
+from dataset_allowed_definitions import get_data_mc_sub_eras
+from muon_definitions import (get_full_name, get_eff_name,
                               get_extended_eff_name)
 
 
@@ -13,7 +13,7 @@ from muon_definitions import (get_data_mc_sub_eras,
 # However, it has the benefit of allowing us to redirect the output to a file
 # on a per fit basis.
 def run_single_fit(outFName, inFName, binName, templateFName, plotDir,
-                   fitType, histType, shiftType='Nominal'):
+                   fitType, histType, shiftType='Nominal', resonance='Z'):
 
     os.makedirs(os.path.dirname(outFName), exist_ok=True)
 
@@ -25,8 +25,8 @@ def run_single_fit(outFName, inFName, binName, templateFName, plotDir,
         with open(txtFName, 'w') as f:
             subprocess.check_call([
                 './run_single_fit.py', outFName, inFName, binName,
-                templateFName, plotDir, fitType, histType, shiftType
-                ], stdout=f)
+                templateFName, plotDir, fitType, histType, shiftType, resonance
+                ])#, stdout=f)
     except BaseException:
         print('Error processing', binName, fitType, histType)
 
@@ -35,7 +35,7 @@ def build_condor_submit(joblist, test=False, jobsPerSubmit=1, njobs=1):
 
     # for now, hard coded for lxplus
     args = ['outFName', 'inFName', 'binName', 'templateFName',
-            'plotDir', 'version', 'histType', 'shiftType']
+            'plotDir', 'version', 'histType', 'shiftType', 'resonance']
     files = ['env.sh', 'TagAndProbeFitter.py',
              'run_single_fit.py',
              'RooCMSShape.cc', 'RooCMSShape.h',
@@ -140,6 +140,8 @@ def build_fit_jobs(particle, probe, resonance, era,
 
                 def get_jobs(fitType, shiftType, inType, outType):
                     _jobs = []
+                    
+                    # Data
                     templateFName = os.path.join(_baseDir, 'flat',
                                                  particle, probe,
                                                  resonance, era,
@@ -162,7 +164,9 @@ def build_fit_jobs(particle, probe, resonance, era,
                                            outType, effName)
                     if doData and process(outFName):
                         _jobs += [(outFName, inFName, binName, templateFName,
-                                   plotDir, fitType, 'data', shiftType)]
+                                   plotDir, fitType, 'data', shiftType, resonance)]
+                    
+                    # MC
                     outFName = os.path.join(_baseDir, 'fits_mc',
                                             particle, probe,
                                             resonance, era,
@@ -184,7 +188,8 @@ def build_fit_jobs(particle, probe, resonance, era,
                     if doMC and process(outFName) and\
                             fitType in ['NominalOld', 'AltSigOld']:
                         _jobs += [(outFName, inFName, binName, templateFName,
-                                   plotDir, fitType, 'mc', shiftType)]
+                                   plotDir, fitType, 'mc', shiftType, resonance)]
+                        
                     return _jobs
 
                 for fitShift in config.fitShifts():

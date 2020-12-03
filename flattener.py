@@ -12,6 +12,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
 from registry import registry
+from dataset_allowed_definitions import get_allowed_sub_eras
 from muon_definitions import (get_miniIso_dataframe,
                               get_weighted_dataframe,
                               get_binned_dataframe,
@@ -21,14 +22,14 @@ from muon_definitions import (get_miniIso_dataframe,
 useParquet = True
 
 
-def run_conversion(spark, particle, probe, resonance, era, subEra,
+def run_flattening(spark, particle, probe, resonance, era, subEra,
                    config, shift='Nominal', **kwargs):
     _numerator = kwargs.pop('numerator', [])
     _denominator = kwargs.pop('denominator', [])
     _baseDir = kwargs.pop('baseDir', '')
+    _testing = kwargs.pop('testing', False)
 
-    testing = False
-    print('Running conversion for', resonance, era, subEra, shift)
+    print('Running flattening for', resonance, era, subEra, shift)
 
     if useParquet:
         fnames = list(registry.parquet(
@@ -40,7 +41,7 @@ def run_conversion(spark, particle, probe, resonance, era, subEra,
     jobPath = os.path.join(particle, probe, resonance, era, subEra)
     if shift:
         jobPath = os.path.join(jobPath, shift)
-    if testing:
+    if _testing:
         jobPath = os.path.join('testing', jobPath)
     else:
         jobPath = os.path.join('flat', jobPath)
@@ -48,7 +49,7 @@ def run_conversion(spark, particle, probe, resonance, era, subEra,
         jobPath = os.path.join(_baseDir, jobPath)
     os.makedirs(jobPath, exist_ok=True)
 
-    doGen = subEra in ['DY_madgraph', 'DY_powheg', 'Jpsi']
+    doGen = subEra in ['DY_madgraph', 'DY_powheg', 'JPsi_pythia8']
 
     # default numerator/denominator defintions
     efficiencies = config.efficiencies()
@@ -65,13 +66,14 @@ def run_conversion(spark, particle, probe, resonance, era, subEra,
         baseDF = spark.read.format("root")\
                       .option('tree', treename)\
                       .load(fnames)
-    # create the miniIsoaltion columns
-    miniIsoDF = get_miniIso_dataframe(baseDF)
+    # create the miniIsolation columns
+    # Need miniIsolation in new ntuples to restore this (coming soon)
+    miniIsoDF = baseDF #get_miniIso_dataframe(baseDF)
 
     # create the definitions columns
     definitions = config.definitions()
-    defDF = miniIsoDF
 
+    defDF = miniIsoDF
     for d in definitions:
         defDF = defDF.withColumn(d, F.expr(definitions[d]))
 
@@ -224,32 +226,12 @@ def run_conversion(spark, particle, probe, resonance, era, subEra,
                 f[h] = hist
 
 
-subEras = {
-    'Z': {
-        # ultra legacy
-        'Run2016_UL_HIPM': ['Run2016', 'DY_madgraph'],
-        'Run2016_UL': ['Run2016', 'DY_madgraph'],
-        'Run2017_UL': ['Run2017', 'DY_madgraph'],
-        'Run2018_UL': ['Run2018', 'DY_madgraph'],
-        # ReReco
-        'Run2016': ['Run2016', 'DY_madgraph'],
-        'Run2017': ['Run2017', 'DY_madgraph'],
-        'Run2018': ['Run2018', 'DY_madgraph'],
-        # alternatively split by data taking era
-        # 'Run2017_UL': [f'Run2017{b}' for b in 'BCDEF']+['DY_madgraph'],
-    },
-    'JPsi': {
-        # ultra legacy
-        'Run2017_UL': ['Run2017', 'Jpsi'],
-    },
-}
-
-
 def run_all(spark, particle, probe, resonance, era,
             config, shift='Nominal', **kwargs):
     # data only option
     dataOnly = kwargs.pop('dataOnly', False)
-    for subEra in subEras.get(resonance, {}).get(era, []):
+    subEras = get_allowed_sub_eras(resonance, era)
+    for subEra in subEras:
         if dataOnly and subEra not in era:
             continue
         run_conversion(spark, particle, probe, resonance, era, subEra,

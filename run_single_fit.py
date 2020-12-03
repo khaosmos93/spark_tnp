@@ -11,23 +11,47 @@ ROOT.gROOT.LoadMacro('RooCMSShape.cc+')
 
 
 def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
-                version='Nominal', histType='data', shiftType='Nominal'):
-
+                version='Nominal', histType='data', shiftType='Nominal', resonance='Z'):
+    
     # Nominal
-    tnpNomFitSig = [
+    if resonance == 'JPsi':
+        tnpNomFitSig = [
+        "meanP[-0.0, -5.0, 5.0]", "sigmaP[0.9, 0.005, 5.0]",
+        "meanF[-0.0, -5.0, 5.0]", "sigmaF[0.9, 0.005, 5.0]",
+        "Gaussian::sigResPass(x, meanP, sigmaP)",
+        "Gaussian::sigResFail(x, meanF, sigmaF)",
+        ]
+        tnpNomFitBkg = [
+            # Linear background
+            # "Chebychev::bkgPass(x, cPass[0,-1,1])",
+            # "Chebychev::bkgFail(x, cFail[0,-1,1])",
+            # Quadratic background
+            "Chebychev::bkgPass(x, {cPass1[0,-1,1], cPass2[0,-1,1]})",
+            "Chebychev::bkgFail(x, {cFail1[0,-1,1], cFail2[0,-1,1]})",
+            # CMSShape background (note it was designed for Z->ll)
+            # (look at RooCMSShape.cc)
+            # "acmsP[2.9, 2.0, 4.0]", "betaP[0.05, 0.001, 0.10]",
+            # "gammaP[0.1, -20, 20]", "peakP[3.1]",
+            # "acmsF[2.9, 2.0, 4.0]", "betaF[0.05, 0.001, 0.10]",
+            # "gammaF[0.1, -20, 20]", "peakF[3.1]",
+            # "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+            # "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+        ]
+    else:
+        tnpNomFitSig = [
         "meanP[-0.0, -5.0, 5.0]", "sigmaP[0.9, 0.05, 5.0]",
         "meanF[-0.0, -5.0, 5.0]", "sigmaF[0.9, 0.05, 5.0]",
         "Gaussian::sigResPass(x, meanP, sigmaP)",
         "Gaussian::sigResFail(x, meanF, sigmaF)",
-    ]
-    tnpNomFitBkg = [
-        "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
-        "gammaP[0.1, -2, 2]", "peakP[91.0]",
-        "acmsF[60., 50., 190.]", "betaF[0.05, 0.01, 0.08]",
-        "gammaF[0.1, -2, 2]", "peakF[91.0]",
-        "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
-        "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
-    ]
+        ]
+        tnpNomFitBkg = [
+            "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
+            "gammaP[0.1, -2, 2]", "peakP[91.0]",
+            "acmsF[60., 50., 190.]", "betaF[0.05, 0.01, 0.08]",
+            "gammaF[0.1, -2, 2]", "peakF[91.0]",
+            "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+            "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+        ]
 
     # NominalOld
     tnpNomFitOldSig = [
@@ -35,9 +59,9 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         "widthP1[2.495]",
         "meanF1[90.0, 80.0, 100.0]", "sigmaF1[0.9, 0.5, 3.0]",
         "widthF1[2.495]",
-        "meanP2[90.0.80.0.100.0]", "sigmaP2[4.0, 3.0, 10.0]",
+        "meanP2[90.0, 80.0, 100.0]", "sigmaP2[4.0, 3.0, 10.0]",
         "widthP2[2.495]",
-        "meanF2[90.0.80.0.100.0]", "sigmaF2[4.0, 3.0, 10.0]",
+        "meanF2[90.0, 80.0, 100.0]", "sigmaF2[4.0, 3.0, 10.0]",
         "widthF2[2.495]",
         "Voigtian::sigPass1(x, meanP1, widthP1, sigmaP1)",
         "Voigtian::sigFail1(x, meanF1, widthF1, sigmaF1)",
@@ -56,17 +80,30 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
     ]
 
     # AltSig (note, originally was CB for res, but took too long)
-    tnpAltSigFit = [
-        "meanP[-0.0, -5.0, 5.0]", "sigmaP[1, 0.7, 6.0]",
-        "alphaP[2.0, 1.2, 3.5]",
-        'nP[3, -5, 5]', "sigmaP_2[1.5, 0.5, 6.0]", "sosP[1, 0.5, 5.0]",
-        "meanF[-0.0, -5.0, 5.0]", "sigmaF[2, 0.7, 15.0]",
-        "alphaF[2.0, 1.2, 3.5]",
-        'nF[3, -5, 5]', "sigmaF_2[2.0, 0.5, 6.0]", "sosF[1, 0.5, 5.0]",
-        # alternative for faster fitting, just use gen truth for template
-        "Gaussian::sigResPass(x, meanP, sigmaP)",
-        "Gaussian::sigResFail(x, meanF, sigmaF)",
-    ]
+    if resonance == 'JPsi':
+        tnpAltSigFit = [
+            "meanP[-0.0, -5.0, 5.0]", "sigmaP[1, 0.001, 6.0]",
+            "alphaP[2.0, 1.2, 3.5]",
+            'nP[3, -5, 5]', "sigmaP_2[1.5, 0.5, 6.0]", "sosP[1, 0.5, 5.0]",
+            "meanF[-0.0, -5.0, 5.0]", "sigmaF[2, 0.001, 15.0]",
+            "alphaF[2.0, 1.2, 3.5]",
+            'nF[3, -5, 5]', "sigmaF_2[2.0, 0.5, 6.0]", "sosF[1, 0.5, 5.0]",
+            # alternative for faster fitting, just use gen truth for template
+            "Gaussian::sigResPass(x, meanP, sigmaP)",
+            "Gaussian::sigResFail(x, meanF, sigmaF)",
+        ]
+    else:
+        tnpAltSigFit = [
+            "meanP[-0.0, -5.0, 5.0]", "sigmaP[1, 0.7, 6.0]",
+            "alphaP[2.0, 1.2, 3.5]",
+            'nP[3, -5, 5]', "sigmaP_2[1.5, 0.5, 6.0]", "sosP[1, 0.5, 5.0]",
+            "meanF[-0.0, -5.0, 5.0]", "sigmaF[2, 0.7, 15.0]",
+            "alphaF[2.0, 1.2, 3.5]",
+            'nF[3, -5, 5]', "sigmaF_2[2.0, 0.5, 6.0]", "sosF[1, 0.5, 5.0]",
+            # alternative for faster fitting, just use gen truth for template
+            "Gaussian::sigResPass(x, meanP, sigmaP)",
+            "Gaussian::sigResFail(x, meanF, sigmaF)",
+        ]
 
     # AltSigOld
     tnpAltSigFitOld = [
@@ -120,17 +157,25 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
     hP = infile.Get(f'{binName}_Pass')
     hF = infile.Get(f'{binName}_Fail')
     hP, hF = rebin(hP, hF)
-    fitter = TagAndProbeFitter(binName)
+    fitter = TagAndProbeFitter(binName, resonance=resonance)
     fitter.set_histograms(hP, hF)
     infile.Close()
 
     # mass range systematic
-    if shiftType == 'massRangeUp':
-        fitter.set_fit_range(75, 135)
-    elif shiftType == 'massRangeDown':
-        fitter.set_fit_range(65, 125)
+    if resonance == 'JPsi':
+        if shiftType == 'massRangeUp':
+            fitter.set_fit_range(2.96, 3.36)
+        elif shiftType == 'massRangeDown':
+            fitter.set_fit_range(2.84, 3.24)
+        else:
+            fitter.set_fit_range(2.90, 3.30)
     else:
-        fitter.set_fit_range(70, 130)
+        if shiftType == 'massRangeUp':
+            fitter.set_fit_range(75, 135)
+        elif shiftType == 'massRangeDown':
+            fitter.set_fit_range(65, 125)
+        else:
+            fitter.set_fit_range(70, 130)
 
     # setup
     os.makedirs(os.path.dirname(outFName), exist_ok=True)
