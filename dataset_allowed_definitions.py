@@ -73,16 +73,16 @@ def get_allowed_sub_eras(resonance, era):
         'JPsi': {
             # ultra legacy
             'Run2017_UL': ['Run2017'] + [
-                f'Run2017{b}' for b in 'BCDEF']+['Jpsi'],
+                f'Run2017{b}' for b in 'BCDEF']+['JPsi_pythia8'],
             # heavy ion
             'Run2016_HI_pPb_8TeV': ['Run2016'],
             # rereco
             'Run2016': ['Run2016'] + [
-               f'Run2016{b}' for b in 'BCDEFGH']+['Jpsi'],
+               f'Run2016{b}' for b in 'BCDEFGH']+['JPsi_pythia8'],
             'Run2017': ['Run2017'] + [
-               f'Run2017{b}' for b in 'BCDEF']+['Jpsi'],
+               f'Run2017{b}' for b in 'BCDEF']+['JPsi_pythia8'],
             'Run2018': ['Run2018'] + [
-               f'Run2018{b}' for b in 'ABCD']+['Jpsi'],
+               f'Run2018{b}' for b in 'ABCD']+['JPsi_pythia8'],
         },
     }
     return subEras.get(resonance, {}).get(era, [])
@@ -109,13 +109,13 @@ def get_data_mc_sub_eras(resonance, era):
         },
         'JPsi': {
             # ultra legacy
-            'Run2017_UL': ['Run2017', 'Jpsi'],
+            'Run2017_UL': ['Run2017', 'JPsi_pythia8'],
             # heavy ion
             'Run2016_HI_pPb_8TeV': ['Run2016', None],
             # Rereco (Charmonium)
-            'Run2016': ['Run2016', 'Jpsi'],
-            'Run2017': ['Run2017', 'Jpsi'],
-            'Run2018': ['Run2018', 'Jpsi'],
+            'Run2016': ['Run2016', 'JPsi_pythia8'],
+            'Run2017': ['Run2017', 'JPsi_pythia8'],
+            'Run2018': ['Run2018', 'JPsi_pythia8'],
         },
     }
     return eraMap.get(resonance, {}).get(era, [None, None])

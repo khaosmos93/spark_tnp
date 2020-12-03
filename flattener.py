@@ -49,7 +49,7 @@ def run_flattening(spark, particle, probe, resonance, era, subEra,
         jobPath = os.path.join(_baseDir, jobPath)
     os.makedirs(jobPath, exist_ok=True)
 
-    doGen = subEra in ['DY_madgraph', 'DY_powheg', 'Jpsi']
+    doGen = subEra in ['DY_madgraph', 'DY_powheg', 'JPsi_pythia8']
 
     # default numerator/denominator defintions
     efficiencies = config.efficiencies()
