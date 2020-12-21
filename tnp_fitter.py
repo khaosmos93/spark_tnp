@@ -163,7 +163,6 @@ def parse_command_line(argv):
         help='Convert ROOT to parquet',
     )
     add_common_particle(parser_convert)
-    add_common_probe(parser_convert)
     add_common_resonance(parser_convert)
     add_common_era(parser_convert)
     add_common_sub_era(parser_convert)
@@ -237,7 +236,7 @@ def main(argv=None):
 
     if args.command == 'convert':
         from converter import run_all
-        run_all(args.particle, args.probe, args.resonance, args.era, args.subEra)
+        run_all(args.particle, args.resonance, args.era, args.subEra)
         return 0
     elif args.command == 'flatten':
         from flattener import run_spark

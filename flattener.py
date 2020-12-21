@@ -234,7 +234,7 @@ def run_all(spark, particle, probe, resonance, era,
     for subEra in subEras:
         if dataOnly and subEra not in era:
             continue
-        run_conversion(spark, particle, probe, resonance, era, subEra,
+        run_flattening(spark, particle, probe, resonance, era, subEra,
                        config, shift, **kwargs)
 
 

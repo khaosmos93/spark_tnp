@@ -78,20 +78,20 @@ def getDataEff(binName, fname, shift=None, cutAndCount=False, resonance='Z'):
             hF = tfile.Get('{}_Fail'.format(binName))
             # hard code Z for now (same as in run_single_fit.py)
             # AF: TODO make the Z vs JPsi treatment less hacky perhaps
-           if resonance == 'JPsi':
-               if shift == 'massRangeUp':
-                   blow, bhigh = 2.96, 3.36
-               elif shift == 'massRangeDown':
-                   blow, bhigh = 2.84, 3.24
-               else:
-                   blow, bhigh = 2.90, 3.30
-           else:
-               if shift == 'massRangeUp':
-                   blow, bhigh = 75, 135
-               elif shift == 'massRangeDown':
-                   blow, bhigh = 65, 125
-               else:
-                   blow, bhigh = 70, 130
+            if resonance == 'JPsi':
+                if shift == 'massRangeUp':
+                    blow, bhigh = 2.96, 3.36
+                elif shift == 'massRangeDown':
+                    blow, bhigh = 2.84, 3.24
+                else:
+                    blow, bhigh = 2.90, 3.30
+            else:
+                if shift == 'massRangeUp':
+                    blow, bhigh = 75, 135
+                elif shift == 'massRangeDown':
+                    blow, bhigh = 65, 125
+                else:
+                    blow, bhigh = 70, 130
             bin1 = hP.GetXaxis().FindBin(blow)
             bin2 = hP.GetXaxis().FindBin(bhigh)
             eP = ctypes.c_double(-1.0)

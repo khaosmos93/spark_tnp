@@ -7,7 +7,7 @@ from registry import registry
 from dataset_allowed_definitions import get_allowed_sub_eras
 
 
-def run_convert(spark, particle, probe, resonance, era, subEra, customDir=''):
+def run_convert(spark, particle, resonance, era, subEra, customDir=''):
     '''
     Converts a directory of root files into parquet
     '''
@@ -68,7 +68,7 @@ def run_convert(spark, particle, probe, resonance, era, subEra, customDir=''):
                      .parquet(outname)
 
 
-def run_all(particle, probe, resonance, era, subEra=None, customDir=''):
+def run_all(particle, resonance, era, subEra=None, customDir=''):
 
     if subEra is not None:
         subEras = [subEra]
@@ -99,7 +99,7 @@ def run_all(particle, probe, resonance, era, subEra=None, customDir=''):
     print('---------------- END DEBUG ----------------\n\n')
 
     for subEra in subEras:
-        print('\nConverting:', particle, probe, resonance, era, subEra)
-        run_convert(spark, particle, probe, resonance, era, subEra, customDir)
+        print('\nConverting:', particle, resonance, era, subEra)
+        run_convert(spark, particle, resonance, era, subEra, customDir)
 
     spark.stop()
