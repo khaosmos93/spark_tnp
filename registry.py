@@ -56,14 +56,15 @@ registry = Registry()
 _rpath = os.path.abspath(os.path.dirname(__file__))
 _jsons = [
     # Muon POG generalTrack probes
-    'data/registry_muon_Z_generalTracks.json',
-    'data/registry_muon_JPsi_generalTracks.json',
+    ## 'data/registry_muon_Z_generalTracks.json',
+    'data/registry_muon_Z_generalTracks_for_dSA.json', # currently conflicts with previous (non-dSA) entry
+    ## 'data/registry_muon_JPsi_generalTracks.json',
+    'data/registry_muon_JPsi_generalTracks_for_dSA.json', # currently conflicts with previous (non-dSA) entry
     # Muon POG standAloneMuon probes
     'data/registry_muon_Z_standAloneMuons.json',
-    # Muon POG displacedStandAloneMuon probes
-    'data/registry_muon_Z_DisplacedID_dSA_probes.json',
-    'data/registry_muon_JPsi_DisplacedID_dSA_probes.json',
-    # 'data/registry_muon_Z_dSA_genTrack_probes.json', # currently conflicts with first entry
+    # Muon POG dSA probes for displaced ID measurements
+    'data/registry_muon_Z_displacedStandAloneMuons.json',
+    'data/registry_muon_JPsi_displacedStandAloneMuons.json',
     # dSA studies
     'data/registry_muon_Z_dSA_dRStudy.json'
 ]
