@@ -141,3 +141,6 @@ condor/
 *.d
 *.so
 *.pcm
+
+# ROOT dictionary
+*_ACLiC_dict.cxx_tmp*
