@@ -7,7 +7,7 @@
         ["DisplacedIDNoPtErr", "dSAMuons"],
         ["DisplacedIDNoChi2", "dSAMuons"]
     ],
-    "selection": "pair_mass > 70 and pair_mass < 110 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.1 and tag_isTight == 1",
+    "selection": "pair_mass > 80 and pair_mass < 100 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.1 and tag_isTight == 1 and probe_pixelHits > 0",
     "definitions": {
         "genTracks": "((probe_pt > 15)) and probe_relIso04 < 0.1",
         "genTracksNoQuality": "probe_pt > 15",

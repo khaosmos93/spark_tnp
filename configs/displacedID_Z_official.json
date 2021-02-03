@@ -2,7 +2,7 @@
     "efficiencies": [
         ["DisplacedID", "dSAMuons"]
     ],
-    "selection": "probe_isMuMatched == 1 and probe_pt > 15 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.2 and tag_isTight == 1",
+    "selection": "probe_isMuMatched == 1 and probe_pt > 15 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.2 and tag_isTight == 1 and probe_relIso04 < 0.1",
     "definitions": {
         "genTracks": "((probe_pt > 15)) and probe_relIso04 < 0.1",
         "genTracksNoQuality": "probe_pt > 15",
@@ -38,23 +38,19 @@
     "fitVariable": "mass",
     "fitVariableGen": "mcMass",
     "binVariables": [
-        ["abseta", "pt"],
-        ["eta"],
-        ["nvtx"]
+        ["abseta", "pt"]
     ],
     "shifts": {
         "TagIsoUp": {
-            "selection": "probe_isMuMatched == 1 and probe_pt > 15 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.3 and tag_isTight == 1"
+            "selection": "probe_isMuMatched == 1 and probe_pt > 15 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.3 and tag_isTight == 1 and probe_relIso04 < 0.1"
         },
         "TagIsoDown": {
-            "selection": "probe_isMuMatched == 1 and probe_pt > 15 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.1 and tag_isTight == 1"
+            "selection": "probe_isMuMatched == 1 and probe_pt > 15 and tag_pt > 26 and tag_abseta < 2.4 and probe_abseta < 2.4 and HLT_IsoMu24_v == 1 and tag_relIso04 < 0.1 and tag_isTight == 1 and probe_relIso04 < 0.1"
         }
     },
     "fitShifts": {
         "AltSig": {"fitType": "AltSig"},
         "AltBkg": {"fitType": "AltBkg"},
-        "NominalOld": {"fitType": "NominalOld"},
-        "AltSigOld": {"fitType": "AltSigOld"},
         "tagIsoUp": {"shiftType": "tagIsoUp", "inType": "TagIsoUp"},
         "tagIsoDown": {"shiftType": "tagIsoDown", "inType": "TagIsoDown"},
         "massBinUp": {"shiftType": "massBinUp"},
