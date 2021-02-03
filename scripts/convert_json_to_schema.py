@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import sys
+# insert at 1, 0 is the script path (or '' in REPL)
+sys.path.insert(1, '..')
 from correctionlib.correctionlib.schemav1 import Binning, Category, Correction, CorrectionSet
 
 def build_uncertainties(sf):
@@ -76,7 +79,7 @@ def build_etas(sf):
     })
 
 
-import sys, json, os
+import json, os
 
 if __name__ != "__main__" or len(sys.argv) < 2:
     print(f'Please run this script as {sys.argv[0]} json_to_be_converted')
