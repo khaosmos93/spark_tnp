@@ -13,7 +13,7 @@ you need to request access to the cluster in the help document found [here](http
 The following will produce a set of example efficiencies (assuming you can run on analytix):
 
 ```bash
-git clone https://github.com/dntaylor/spark_tnp.git
+git clone https://gitlab.cern.ch/cms-muonPOG/spark_tnp.git
 cd spark_tnp
 source env.sh
 kinit
@@ -30,13 +30,15 @@ These notebooks use [https://swan.cern.ch](https://swan.cern.ch) to connect to t
 
 ## Command line setup
 
-There are a couple of ways you can run. Either connect to the edge node or directly on lxplus.
-The jobs are run on spark clusters and the data is read from an hdfs cluster.
-The default (and preferred) way is to use the `analytix` spark and hdfs cluster.
+There are a couple of ways you can run. Either connect to the hadoop cluster edge nodes or directly on lxplus.
+
+**Update (January 2021):** It is highly recommended to use the edge nodes because they mount both eos and hdfs filesystems as fuse-style mounts. This means one can move files easily from eos (e.g. flat ROOT ntuples produced with the [MuonAnalyzer package](https://gitlab.cern.ch/cms-muonPOG/muonanalysis-muonanalyzer/)) to hdfs using standard `cp` and `mv` commands, and tab completion is enabled. To move files on lxplus, dedicated `hdfs dfs` commands are needed instead (still doable, just not convenient). Note that if you do work on the edge nodes you will need to briefly get back to lxplus to submit fitting condor jobs (see below), since the edge nodes do not have condor set up.
+
+The flattening jobs are run on spark clusters and the data is read from an hdfs cluster. The fitting jobs are still run on condor since they depend on ROOT libraries. The default (and preferred) way to run flattening jobs is to use the `analytix` spark and hdfs cluster.
 
 ### Edge node
 
-Connect to the hadoop edge node (from within the CERN network):
+Connect to the hadoop edge node (from within the CERN network, e.g. connect first to lxplus and then to the edge node):
 
 ```bash
 ssh it-hadoop-client
@@ -71,7 +73,7 @@ kinit
 
 ### Optional
 
-Install `tqdm` packaged for a nice progressbar.
+Install `tqdm` packaged for a nice progress bar.
 
 ```bash
 pip install --user tqdm
@@ -81,13 +83,13 @@ pip install --user tqdm
 
 The tag-and-probe process is broken down into several parts:
 
-1. Creation of the flat ROOT tag-and-probe trees (not shown here)
-2. Conversion of the ROOT TTree into the parquet data format
-3. Reduce the data into binned histograms with spark
-4. Fit the resulting histograms
-5. Extraction of efficiencies and scale factors
+1. Creation of the flat ROOT tag-and-probe trees (not shown here, use the [MuonAnalyzer package](https://gitlab.cern.ch/cms-muonPOG/muonanalysis-muonanalyzer/))
+2. Conversion of the ROOT TTree into the parquet data format (convert)
+3. Reduce the data into binned histograms with spark (flatten)
+4. Fit the resulting histograms (fit)
+5. Extraction of efficiencies and scale factors (prepare)
 
-These steps are controlled with the [tnp_fitter.py](tnp_fiter.py) script.
+These steps are controlled with the [tnp_fitter.py](tnp_fitter.py) script.
 For help with the script run:
 ```bash
 ./tnp_fitter.py -h
@@ -113,7 +115,24 @@ The output should be written to `analytix`.
 Conversion with `analytix` requires you to first copy your root files
 to `hdfs://analytix`. There is an issue with reading root files from `eos`
 on `analytix` that needs to be understood.
-The following should be executed when you are connected to the edge node.
+
+**Update (January 2021):** Using `analyix` is the recommended way to convert root files to parquet. Using the tips above to connect to the edge node and move files using the fuse mount makes the process much smoother.
+
+The following should be executed when you are connected to the edge node:
+
+```bash
+cp /eos/user/$U/$USER/[path-to-files]/*.root /hdfs/analytix.cern.ch/user/$USER/[path-to-out-dir]
+```
+
+or
+
+```bash
+cp /eos/cms/store/[path-to-files]/*.root /hdfs/analytix.cern.ch/cms/muon_pog/[path-to-out-dir]
+```
+
+depending on where your files are and your access level.
+
+If on lxplus, use `hdfs` commands to copy the files (note the slightly different syntax):
 
 ```bash
 hdfs dfs -cp root://eoscms.cern.ch//eos/cms/store/[path-to-files]/*.root hdfs://analytix/[path-to-out-dir]
@@ -132,9 +151,11 @@ Once copied, you can use:
 ./tnp_fitter.py convert [particle] [probe] [resonance] [era]
 ```
 
-**Note:** this will currently raise a `NotImplemented` exception.
+~~**Note:** this will currently raise a `NotImplemented` exception.
 You can look at [converter.py](converter.py) for how to run things
-until it is incorporated.
+until it is incorporated.~~
+
+**Update (January 2021):** Conversion has now been implemented in ./tnp_fitter.
 
 ### Flatten histograms with spark
 
@@ -145,7 +166,7 @@ the efficiency data into binned histograms.
 ./tnp_fitter.py flatten -h
 ```
 
-For example, to flatten all histograms for the Run2017 Legacy muon scalefactors from Z:
+For example, to flatten all histograms for the Run2017 Legacy muon scale factors from Z:
 
 ```bash
 ./tnp_fitter.py flatten muon generalTracks Z Run2017_UL configs/muon_pog_official_run2_Z_2017.json
@@ -193,28 +214,36 @@ $ ./tnp_fitter.py fit muon generalTracks Z Run2017_UL configs/muon_pog_official_
 $ condor_submit condor.sub
 ```
 
-**Note:** CERN no longer allows condor jobs referencing eos mountpoints (see [here](https://batchdocs.web.cern.ch/troubleshooting/eos.html#no-eos-submission-allowed)). This means it's not possible to submit the jobs from the repository cloned on a SWAN instance, since SWAN projects are kept at `/eos/user/S/SOMEUSER/SWAN_projects`. So if you've cloned this repo into a SWAN area, make sure to copy the repo elsewhere first before submitting condor jobs (e.g. afs user or work area).
+**Note:** CERN no longer allows condor jobs referencing eos mountpoints (see [here](https://batchdocs.web.cern.ch/troubleshooting/eos.html#no-eos-submission-allowed)). This means it's not possible to submit the jobs from the repository cloned on a SWAN instance, since SWAN projects are kept at `/eos/user/S/SOMEUSER/SWAN_projects`. So if you've cloned this repo into a SWAN area to look at the Jupyter notebooks, make sure to copy the repo elsewhere first before submitting condor jobs (e.g. afs user or work area).
+
+**Note:** If you're running from the edge nodes, the condor submission step must still be done from lxplus (see above).
 
 The histograms which are fit can be controlled with optional filters.
 See documentation with:
 ```bash
 ./tnp_fitter.py fit -h
 ```
-
 There is a simple automatic recovery processing that can be run
 (in case of condor failures).
 More advanced options (such as using statistical tests to evaluate the GOF)
 are still being implemented.
+
 ```bash
 ./tnp_fitter.py fit muon generalTracks Z Run2017_UL configs/muon_pog_official_run2_Z_2017.json -j 16 --recover
 ```
 
+**Note:** this recovery procedure simply looks for missing job output files in the fit directory, and runs the missing jobs again locally. If you are re-running your pipeline (e.g. after fixing some mistake in the config) using the same basedir, old fit jobs might still be located in that directory and so this simple recovery procedure won't detect the condor job failures. Additionally, you will end up with a mix of new and old fits in the folder. To avoid this, it's safer to erase the relevant folders before re-running (or choosing a new basedir).
+
 ### Extract scale factors
 
-Plots and scalefactors can the be extracted with:
+Plots and scale factors can the be extracted with:
+
 ```bash
-./tnp_fitter.py prepare muon generalTracks Z Run2017_UL configs/muon_pog_official_run2_Z_2017.json --condor
+./tnp_fitter.py prepare muon generalTracks Z Run2017_UL configs/muon_pog_official_run2_Z_2017.json
 ```
+
+Plots are saved into a plots/ directory and the json files into a efficiencies/ directory. Two json versions are now produced, one with the standard Muon POG format and another with the new xPOG recommended schemas. Feel free to use either.
+
 
 **Note:** this is still a WIP.
 
