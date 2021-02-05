@@ -397,6 +397,7 @@ def prepare(baseDir, particle, probe, resonance, era,
     indices = [list(range(1, len(binning[variableLabel])))
                for variableLabel in variableLabels]
     output = {effName: {varName: {}}}
+    all_systematics = {}
     for index in itertools.product(*indices):
         binName = get_full_name(num, denom, variableLabels, index)
         subVarKeys = [
@@ -481,6 +482,9 @@ def prepare(baseDir, particle, probe, resonance, era,
                                  systList['SF']['shiftTypes']):
             _out[s] = sf_syst[s]['err']
 
+        # copy systs for later schema
+        all_systematics[index] = _out.copy()
+
         def set_bin(hist, index, val, err):
             index = list(index)
             val_args = index + [val]
@@ -559,6 +563,55 @@ def prepare(baseDir, particle, probe, resonance, era,
     # JSON format
     with open('{}.json'.format(effPath), 'w') as f:
         f.write(json.dumps(output, indent=4, sort_keys=True))
+
+    # Now build the new xPOG schema v1
+
+    from correctionlib.correctionlib.schemav1 import Category, Binning, Correction, CorrectionSet
+
+    def build_schema(dim, index):
+        # If we reach recursion bottom, build and return the systematics node
+        if dim == len(variableLabels) + 1:
+            keys, content = [], []
+            for syst, value in all_systematics[index].items():
+                keys.append(syst)
+                content.append(value)
+                
+            return Category.parse_obj({
+                "nodetype": "category",
+                "keys": keys,
+                "content": content
+            })
+        
+        # If not, build a binning node
+        edges = list(map(float, binning[variableLabels[dim-1]]))
+        content = [build_schema(dim+1, tuple(list(index)[0:dim-1]+[i]+list(index)[dim:])) for i in indices[dim-1]]
+
+        return Binning.parse_obj({
+            "nodetype": "binning",
+            "edges": edges,
+            "content": content
+        })
+
+    inputs = [{"name": vl, "type": "real"} for vl in variableLabels]
+    inputs += [{"name": "uncertainties", "type": "string"}]
+
+    corr = Correction.parse_obj({
+            "version": 1,
+            "name": effName,
+            "description": effName,
+            "inputs": inputs,
+            "output": {"name": "weight", "type": "real"},
+            "data": build_schema(1, tuple([1]*len(variableLabels)))
+    })
+    cset = CorrectionSet.parse_obj({
+        "schema_version": 1,
+        "corrections": [corr]
+    })
+
+    # Write out schema json
+    with open('{}_schemaV1.json'.format(effPath), "w") as fout:
+        fout.write(cset.json(exclude_unset=True, indent=4))
+
 
     # ROOT histogram format
     tfile = ROOT.TFile.Open('{}.root'.format(effPath), 'recreate')
