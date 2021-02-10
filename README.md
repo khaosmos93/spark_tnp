@@ -10,10 +10,10 @@ you need to request access to the cluster in the help document found [here](http
 
 ## Quick start
 
-The following will produce a set of example efficiencies (assuming you can run on analytix):
+The following will produce a set of example efficiencies (assuming you can run on analytix) (assuming Git version > 2.13):
 
 ```bash
-git clone https://gitlab.cern.ch/cms-muonPOG/spark_tnp.git
+git clone --recurse-submodules https://gitlab.cern.ch/cms-muonPOG/spark_tnp.git
 cd spark_tnp
 source env.sh
 kinit
