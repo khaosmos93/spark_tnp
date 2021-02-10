@@ -138,6 +138,16 @@ If on lxplus, use `hdfs` commands to copy the files (note the slightly different
 hdfs dfs -cp root://eoscms.cern.ch//eos/cms/store/[path-to-files]/*.root hdfs://analytix/[path-to-out-dir]
 ```
 
+**Optimizing ROOT file sizes to work with spark**
+
+Spark works best with a few large-ish files (1 GB) as opposed to lots of small files (few MBs), which are produced by CRAB. Before converting to parquet, it is recommended to check the CRAB output file sizes of your ntuples and if they're very small to hadd them into a few large root files. A script `hadd_by_size.sh` exists in scripts/ to automatically convert a folder of small ROOT files into equisized 1 GB files. The syntax is:
+
+```bash
+./scripts/hadd_by_size.sh [path-to-crab-output]
+```
+
+This will produce several files named `haddOut_$num_$UUID.root` in the local directory, each approximately 1 GB in size. These files can then be transferred to `hdfs` to be converted into parquet. Note this step is not required but it is recommended for speed up gains later on.
+
 Additionally, you will need to download the `jar` files to add
 to the spark executors:
 
@@ -148,14 +158,26 @@ bash setup.sh
 Once copied, you can use:
 
 ```bash
-./tnp_fitter.py convert [particle] [probe] [resonance] [era]
+./tnp_fitter.py convert [particle] [resonance] [era] [[subera]]
 ```
 
 ~~**Note:** this will currently raise a `NotImplemented` exception.
 You can look at [converter.py](converter.py) for how to run things
 until it is incorporated.~~
 
-**Update (January 2021):** Conversion has now been implemented in ./tnp_fitter.
+**Update (January 2021):** Conversion has now been implemented in ./tnp_fitter. By default the converter looks for root files in
+
+```
+/hdfs/analytix.cern.ch/user/[user]/root/[particle]/[resonance]/[era]/[subera]/
+```
+
+though a custom directory can be specified. The output parquet files will be placed in
+
+```
+/hdfs/analytix.cern.ch/user/[user]/parquet/[particle]/[resonance]/[era]/[subera]/tnp.parquet
+``` 
+
+Any new datasets must be registered in registry.py following instructions [here](data/README.md).
 
 ### Flatten histograms with spark
 

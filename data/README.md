@@ -22,7 +22,11 @@ The structure is a list of objects with the following required entries:
     // a list of root files (unix glob syntax supported)
     "root": ["/path/to/tnp*.root"],
     // the tree inside the rootfile
-    "treename": "tpTree/fitter_tree",
+    // default is "tpTree/fitter_tree" for old ntuples
+    // and "muon/Events" for new ntuples produced with the 
+    // MuonAnalysis package
+    // "treename": "tpTree/fitter_tree",
+    "treename": "muon/Events",
     // integrated luminosity in fb-1 (-1 for MC)
     "luminosity": 5.933,
     // version number, in case a dataset is remade
