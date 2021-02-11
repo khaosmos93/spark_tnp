@@ -48,8 +48,7 @@ Setup the environment:
 
 ```bash
 kinit
-source /cvmfs/sft.cern.ch/lcg/views/LCG_97python3/x86_64-centos7-gcc8-opt/setup.sh
-source hadoop-setconf.sh analytix
+source env-edge-node.sh
 ```
 
 ### LXPLUS
@@ -63,13 +62,11 @@ ssh lxplus.cern.ch
 Setup the environment:
 
 ```bash
-source env.sh
+kinit
+source env-lxplus.sh
 ```
 
-**Note**: Do not forget to make sure you have a valid kerberos token with:
-```bash
-kinit
-```
+**Note**: Do not forget to make sure you have a valid kerberos token with `kinit`.
 
 ### Optional
 
