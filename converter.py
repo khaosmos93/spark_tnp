@@ -31,6 +31,7 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
     outname = os.path.join(outDir, 'tnp.parquet')
     
     # treename = 'tpTree/fitter_tree'
+    # treename = 'muon/tree'
     treename = 'muon/Events'
 
     print(f'Number of files to process: {len(fnames)}')
@@ -42,7 +43,7 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
     print(f'First file: {fnames[0]}')
 
     # process batchsize files at a time
-    batchsize = 500
+    batchsize = 250
     new = True
     while fnames:
         current = fnames[:batchsize]
