@@ -144,6 +144,9 @@ def get_weighted_dataframe(df, doGen, resonance, era, subEra, shift=None):
        if 'pair_truePileUp' in df.columns:
            weightedDF = df.withColumn(
                'weight', mapping_expr.getItem(F.round('pair_truePileUp')))
+       elif 'nTrueInteractions' in df.columns:
+           weightedDF = df.withColumn(
+               'weight', mapping_expr.getItem(F.round('nTrueInteractions')))
        elif 'nVertices' in df.columns:
            weightedDF = df.withColumn(
                'weight', mapping_expr.getItem(F.col('nVertices')))
