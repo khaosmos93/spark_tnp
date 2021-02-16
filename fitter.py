@@ -14,7 +14,7 @@ from muon_definitions import (get_full_name, get_eff_name,
 # on a per fit basis.
 def run_single_fit(outFName, inFName, binName, templateFName, plotDir,
                    fitType, histType, shiftType='Nominal', resonance='Z',
-                   trig=False):
+                   effType=''):
 
     os.makedirs(os.path.dirname(outFName), exist_ok=True)
 
@@ -26,7 +26,7 @@ def run_single_fit(outFName, inFName, binName, templateFName, plotDir,
         with open(txtFName, 'w') as f:
             subprocess.check_call([
                 './run_single_fit.py', outFName, inFName, binName,
-                templateFName, plotDir, fitType, histType, shiftType, resonance, trig
+                templateFName, plotDir, fitType, histType, shiftType, resonance, effType
                 ])#, stdout=f)
     except BaseException:
         print('Error processing', binName, fitType, histType)
@@ -36,7 +36,7 @@ def build_condor_submit(joblist, test=False, jobsPerSubmit=1, njobs=1):
 
     # for now, hard coded for lxplus
     args = ['outFName', 'inFName', 'binName', 'templateFName',
-            'plotDir', 'version', 'histType', 'shiftType', 'resonance', 'trig']
+            'plotDir', 'version', 'histType', 'shiftType', 'resonance', 'effType']
     files = ['env-lxplus.sh', 'TagAndProbeFitter.py',
              'run_single_fit.py',
              'RooCMSShape.cc', 'RooCMSShape.h',
@@ -106,7 +106,10 @@ def build_fit_jobs(particle, probe, resonance, era,
     _recoverMode = kwargs.pop('recoverMode', 'simple')
     doData = (not _sampleType) or ('data' in _sampleType)
     doMC = (not _sampleType) or ('mc' in _sampleType)
-    trig = ('type' in config and config.type() == 'trig')
+
+    # defining type of efficiency for initializing nominal and alternative
+    # fit functions, initial parameters, mass binning, etc
+    effType = config.type() if 'type' in config else ''
 
     dataSubEra, mcSubEra = get_data_mc_sub_eras(resonance, era)
 
@@ -166,7 +169,7 @@ def build_fit_jobs(particle, probe, resonance, era,
                                            outType, effName)
                     if doData and process(outFName):
                         _jobs += [(outFName, inFName, binName, templateFName,
-                                   plotDir, fitType, 'data', shiftType, resonance, trig)]
+                                   plotDir, fitType, 'data', shiftType, resonance, effType)]
                     
                     # MC
                     outFName = os.path.join(_baseDir, 'fits_mc',
@@ -190,7 +193,7 @@ def build_fit_jobs(particle, probe, resonance, era,
                     if doMC and process(outFName) and\
                             fitType in ['NominalOld', 'AltSigOld']:
                         _jobs += [(outFName, inFName, binName, templateFName,
-                                   plotDir, fitType, 'mc', shiftType, resonance, trig)]
+                                   plotDir, fitType, 'mc', shiftType, resonance, effType)]
                         
                     return _jobs
 

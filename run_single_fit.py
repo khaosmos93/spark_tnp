@@ -12,7 +12,7 @@ ROOT.gROOT.LoadMacro('RooCMSShape.cc+')
 
 def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
                 version='Nominal', histType='data', shiftType='Nominal', resonance='Z',
-                trig=False):
+                effType=''):
 
     # Nominal
     if resonance == 'JPsi':
@@ -46,7 +46,7 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         "Gaussian::sigResFail(x, meanF, sigmaF)",
         ]
         # Exponential is the nominal bkg shape for trigger SFs
-        if trig:
+        if effType=='trig':
             tnpNomFitBkg = [
                 "alphaP[-0.1,-1,0.1]",
                 "alphaF[-0.1,-1,0.1]",
@@ -124,7 +124,7 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
     ]
 
     # AltBkg
-    if trig:
+    if effType = 'trig':
         tnpAltBkgFit = [
             "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
             "gammaP[0.1, -2, 2]", "peakP[91.0]",
@@ -162,7 +162,7 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         tnpWorkspace.extend(tnpAltBkgFit)
 
     def rebin(hP, hF):
-        if trig:
+        if effType=='trig':
             if shiftType == 'massBinUp':
                 hP = hP.Rebin(4)  # 1.0 GeV bins
                 hF = hF.Rebin(4)  # 1.0 GeV bins
