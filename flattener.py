@@ -230,8 +230,13 @@ def run_all(spark, particle, probe, resonance, era,
             config, shift='Nominal', **kwargs):
     # data only option
     dataOnly = kwargs.pop('dataOnly', False)
-    subEras = get_allowed_sub_eras(resonance, era)
+    # M.Oh: do we really want to flatten individual subEras?
+    # subEras = get_allowed_sub_eras(resonance, era)
+    subEras = get_data_mc_sub_eras(resonance, era)
     for subEra in subEras:
+        if subEra==None:
+            continue
+        # M.Oh: unsure whether dataOnly option is properly working...
         if dataOnly and subEra not in era:
             continue
         run_flattening(spark, particle, probe, resonance, era, subEra,
