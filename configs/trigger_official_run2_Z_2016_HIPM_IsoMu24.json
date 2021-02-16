@@ -3,7 +3,7 @@
     "efficiencies": [
         ["IsoMu24_or_IsoTkMu24", "CutBasedIdTight_and_PFIsoTight"]
     ],
-    "selection": "pt > 26 and DeltaPhi70 and tag_IsoMu24==1 and tag_pt > 25.9 and tag_abseta<2.4 and pair_deltaR > 0.3 and mass > 55.0 and mass < 145.0",
+    "selection": "pt > 26 and DeltaPhi70 and tag_IsoMu24==1 and tag_pt > 25.9 and tag_abseta<2.4 and pair_deltaR > 0.3",
     "definitions": {
         "DeltaPhi70": "( ( ( (tag_eta < -0.9 and eta < -0.9) or (tag_eta > 0.9 and eta > 0.9) ) and abs(tag_phi - phi) > 1.22173 ) or ( not ( (tag_eta < -0.9 and eta < -0.9) or (tag_eta > 0.9 and eta > 0.9) ) ) )",
         "CutBasedIdTight_and_PFIsoTight": "CutBasedIdTight == 1 and PFIsoTight == 1",
@@ -16,8 +16,8 @@
         "eta": [-2.4, -2.1, -1.2, -0.9, 0, 0.9, 1.2, 2.1, 2.4],
         "charge": [-2,0,2],
         "nvtx": "np.array(range(0,30+1))*2 + 0.5",
-        "mass": "np.array(range(55*4, 145*4+1)) * 0.25",
-        "mcMass": "np.array(range(55*4, 145*4+1)) * 0.25"
+        "mass": "np.array(range(60*4, 140*4+1)) * 0.25",
+        "mcMass": "np.array(range(60*4, 140*4+1)) * 0.25"
     },
     "variables": {
         "pt": {"variable": "pt", "pretty": "p_{T} (GeV)"},

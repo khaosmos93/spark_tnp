@@ -162,25 +162,14 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         tnpWorkspace.extend(tnpAltBkgFit)
 
     def rebin(hP, hF):
-        if effType=='trig':
-            if shiftType == 'massBinUp':
-                hP = hP.Rebin(4)  # 1.0 GeV bins
-                hF = hF.Rebin(4)  # 1.0 GeV bins
-            elif shiftType == 'massBinDown':
-                hP = hP.Rebin(8)  # 2.0 GeV bins
-                hF = hF.Rebin(8)  # 2.0 GeV bins
-            else:
-                hP = hP.Rebin(6)  # 1.5 GeV bins
-                hF = hF.Rebin(6)  # 1.5 GeV bins
+        if shiftType == 'massBinUp':
+            pass  # no rebin, bin widths are 0.25 GeV
+        elif shiftType == 'massBinDown':
+            hP = hP.Rebin(4)  # 1.0 GeV bins
+            hF = hF.Rebin(4)  # 1.0 GeV bins
         else:
-            if shiftType == 'massBinUp':
-                pass  # no rebin, bin widths are 0.25 GeV
-            elif shiftType == 'massBinDown':
-                hP = hP.Rebin(4)  # 1.0 GeV bins
-                hF = hF.Rebin(4)  # 1.0 GeV bins
-            else:
-                hP = hP.Rebin(2)  # 0.5 GeV bins
-                hF = hF.Rebin(2)  # 0.5 GeV bins
+            hP = hP.Rebin(2)  # 0.5 GeV bins
+            hF = hF.Rebin(2)  # 0.5 GeV bins
         return hP, hF
 
     # init fitter
