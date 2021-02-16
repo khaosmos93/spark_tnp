@@ -1,5 +1,7 @@
 from __future__ import print_function
 import os
+import importlib.util
+import sys
 import math
 import itertools
 import json
@@ -564,54 +566,63 @@ def prepare(baseDir, particle, probe, resonance, era,
     with open('{}.json'.format(effPath), 'w') as f:
         f.write(json.dumps(output, indent=4, sort_keys=True))
 
-    # Now build the new xPOG schema v1
+    # Now build the new xPOG schema v1 if correctionlib and pydantic installed
 
-    from correctionlib.correctionlib.schemav1 import Category, Binning, Correction, CorrectionSet
+    schemav1 = None
+    name = 'correctionlib.schemav1'
+    if name in sys.modules:
+        schemav1 = sys.modules[name]
+    elif importlib.util.find_spec(name) is not None and importlib.util.find_spec('pydantic') is not None:
+        spec = importlib.util.find_spec(name)
+        schemav1 = importlib.util.module_from_spec(spec)
+        sys.modules[name] = schemav1
+        spec.loader.exec_module(schemav1)
 
-    def build_schema(dim, index):
-        # If we reach recursion bottom, build and return the systematics node
-        if dim == len(variableLabels) + 1:
-            keys, content = [], []
-            for syst, value in all_systematics[index].items():
-                keys.append(syst)
-                content.append(value)
-                
-            return Category.parse_obj({
-                "nodetype": "category",
-                "keys": keys,
+    if schemav1 is not None:
+
+        def build_schema(dim, index):
+            # If we reach recursion bottom, build and return the systematics node
+            if dim == len(variableLabels) + 1:
+                keys, content = [], []
+                for syst, value in all_systematics[index].items():
+                    keys.append(syst)
+                    content.append(value) 
+                return schemav1.Category.parse_obj({
+                    "nodetype": "category",
+                    "keys": keys,
+                    "content": content
+                })
+            # If not, build a binning node
+            edges = list(map(float, binning[variableLabels[dim-1]]))
+            content = [build_schema(dim+1, tuple(list(index)[0:dim-1]+[i]+list(index)[dim:])) for i in indices[dim-1]]
+            return schemav1.Binning.parse_obj({
+                "nodetype": "binning",
+                "edges": edges,
                 "content": content
             })
-        
-        # If not, build a binning node
-        edges = list(map(float, binning[variableLabels[dim-1]]))
-        content = [build_schema(dim+1, tuple(list(index)[0:dim-1]+[i]+list(index)[dim:])) for i in indices[dim-1]]
 
-        return Binning.parse_obj({
-            "nodetype": "binning",
-            "edges": edges,
-            "content": content
+        inputs = [{"name": vl, "type": "real"} for vl in variableLabels]
+        inputs += [{"name": "uncertainties", "type": "string"}]
+
+        corr = schemav1.Correction.parse_obj({
+                "version": 1,
+                "name": effName,
+                "description": effName,
+                "inputs": inputs,
+                "output": {"name": "weight", "type": "real"},
+                "data": build_schema(1, tuple([1]*len(variableLabels)))
+        })
+        cset = schemav1.CorrectionSet.parse_obj({
+            "schema_version": 1,
+            "corrections": [corr]
         })
 
-    inputs = [{"name": vl, "type": "real"} for vl in variableLabels]
-    inputs += [{"name": "uncertainties", "type": "string"}]
+        # Write out schema json
+        with open('{}_schemaV1.json'.format(effPath), "w") as fout:
+            fout.write(cset.json(exclude_unset=True, indent=4))
 
-    corr = Correction.parse_obj({
-            "version": 1,
-            "name": effName,
-            "description": effName,
-            "inputs": inputs,
-            "output": {"name": "weight", "type": "real"},
-            "data": build_schema(1, tuple([1]*len(variableLabels)))
-    })
-    cset = CorrectionSet.parse_obj({
-        "schema_version": 1,
-        "corrections": [corr]
-    })
-
-    # Write out schema json
-    with open('{}_schemaV1.json'.format(effPath), "w") as fout:
-        fout.write(cset.json(exclude_unset=True, indent=4))
-
+    else:
+        print("Warning: correctionlib and/or pydantic not installed. Not producing schema jsons.")
 
     # ROOT histogram format
     tfile = ROOT.TFile.Open('{}.root'.format(effPath), 'recreate')
