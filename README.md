@@ -70,11 +70,10 @@ source env-lxplus.sh
 
 ### Recommended
 
-To produce the new common schema jsons recommended by [xPOG](https://github.com/nsmith-/correctionlib) in addition to the classic style jsons, two additional libraries are needed:
+To produce the new common schema jsons recommended by xPOG in addition to the classic style jsons, an additional library ([correctionlib]((https://github.com/nsmith-/correctionlib))) is needed:
 
 ```bash
-pip install --user pydantic
-pip install --user correctionlib
+pip install --user correctionlib==1.1
 ```
 
 ### Optional

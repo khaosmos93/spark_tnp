@@ -569,13 +569,13 @@ def prepare(baseDir, particle, probe, resonance, era,
     # Now build the new xPOG schema v1 if correctionlib and pydantic installed
 
     schemav1 = None
-    name = 'correctionlib.schemav1'
-    if name in sys.modules:
-        schemav1 = sys.modules[name]
-    elif importlib.util.find_spec(name) is not None and importlib.util.find_spec('pydantic') is not None:
-        spec = importlib.util.find_spec(name)
+    libname = 'correctionlib.schemav1'
+    if libname in sys.modules:
+        schemav1 = sys.modules[libname]
+    elif importlib.util.find_spec(libname) is not None:
+        spec = importlib.util.find_spec(libname)
         schemav1 = importlib.util.module_from_spec(spec)
-        sys.modules[name] = schemav1
+        sys.modules[libname] = schemav1
         spec.loader.exec_module(schemav1)
 
     if schemav1 is not None:
@@ -622,7 +622,7 @@ def prepare(baseDir, particle, probe, resonance, era,
             fout.write(cset.json(exclude_unset=True, indent=4))
 
     else:
-        print("Warning: correctionlib and/or pydantic not installed. Not producing schema jsons.")
+        print("Warning: correctionlib not installed. Not producing schema jsons.")
 
     # ROOT histogram format
     tfile = ROOT.TFile.Open('{}.root'.format(effPath), 'recreate')
