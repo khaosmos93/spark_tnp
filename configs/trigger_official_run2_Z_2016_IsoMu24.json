@@ -39,9 +39,6 @@
     },
     "fitShifts": {
         "AltSig": {"fitType": "AltSig"},
-        "AltBkg": {"fitType": "AltBkg"},
-        "NominalOld": {"fitType": "NominalOld"},
-        "AltSigOld": {"fitType": "AltSigOld"},
         "massBinUp": {"shiftType": "massBinUp"},
         "massBinDown": {"shiftType": "massBinDown"},
         "massRangeUp": {"shiftType": "massRangeUp"},
