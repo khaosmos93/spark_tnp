@@ -709,7 +709,7 @@ def prepare(baseDir, particle, probe, resonance, era,
         if xRange:
             mg.GetXaxis().SetRangeUser(*xRange)
         mg.GetYaxis().SetTitle(ylabel)
-        mg.GetYaxis().SetRangeUser(0.8, 1.10)
+        mg.GetYaxis().SetRangeUser(0.6, 1.20)
         legend = ROOT.TLegend(0.5, 0.70, 0.92, 0.92)
         legend.SetTextFont(42)
         legend.SetBorderSize(0)
@@ -741,6 +741,13 @@ def prepare(baseDir, particle, probe, resonance, era,
         canvas.Print('{}.png'.format(savename))
         canvas.Print('{}.pdf'.format(savename))
         canvas.Print('{}.root'.format(savename))
+
+        # save each graph
+        tfile = ROOT.TFile('{}.root'.format(savename), 'update')
+        for gi in range(ng):
+            graphs[gi].SetTitle(labels[gi])
+            graphs[gi].Write('g_{}_{}'.format(gi, labels[gi]))
+        tfile.Close()
 
     # enumerate over the axis/variable to plot
     axes = [hists[extEffName].GetXaxis(),

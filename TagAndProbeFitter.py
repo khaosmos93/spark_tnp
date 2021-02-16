@@ -128,8 +128,8 @@ class TagAndProbeFitter:
                 "FCONV::sigFail({}, sigPhysFail , sigResFail)".format(
                     self._fitVar))
             # update initial guesses
-            nSigP = self._nGenPass_central / self._nGenPass * self._nPass
-            nSigF = self._nGenFail_central / self._nGenFail * self._nFail
+            nSigP = self._nGenPass_central / self._nGenPass * self._nPass if self._nGenPass > 0. else 0.
+            nSigF = self._nGenFail_central / self._nGenFail * self._nFail if self._nGenFail > 0. else 0.
             if nSigP < 0.5:
                 nSigP = 0.9 * self._nPass
             if nSigF < 0.5:
@@ -302,11 +302,13 @@ class TagAndProbeFitter:
 
         nP = nSigP.getVal()
         e_nP = nSigP.getError()
+        rele_nP = e_nP / nP if nP > 0. else 0.
         nF = nSigF.getVal()
         e_nF = nSigF.getError()
+        rele_nF = e_nF / nF if nF > 0. else 0.
         nTot = nP + nF
         eff = nP / (nP + nF)
-        e_eff = 1.0 / nTot * (e_nP**2 / nP**2 + e_nF**2 / nF**2)**0.5
+        e_eff = 1.0 / nTot * (rele_nP**2 + rele_nF**2)**0.5
 
         text1 = ROOT.TPaveText(0, 0.8, 1, 1)
         text1.SetFillColor(0)

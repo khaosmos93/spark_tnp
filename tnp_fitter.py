@@ -62,6 +62,8 @@ def add_common_multi(parser):
                         help='Don\'t run, just print number of jobs')
     parser.add_argument('--condor', action='store_true',
                         help='Prepare condor submit script')
+    parser.add_argument('--condorTag', type=str, default='',
+                        help='Tag for condor submit script')
     parser.add_argument('--jobsPerSubmit', '-nj', type=int, default=1,
                         help='Number of jobs to run per submit')
 
@@ -287,12 +289,13 @@ def main(argv=None):
         submit_dir = ''
         joblist = os.path.join(
             submit_dir,
-            '{}joblist_{}_{}_{}_{}.txt'.format(
+            '{}joblist_{}_{}_{}_{}{}.txt'.format(
                 'test_' if test else '',
                 args.particle,
                 args.probe,
                 args.resonance,
-                args.era
+                args.era,
+                '_'+args.condorTag if args.condorTag != '' else ''
             )
         )
         config = build_condor_submit(joblist,
@@ -303,12 +306,13 @@ def main(argv=None):
             os.makedirs('condor', exist_ok=True)
         configpath = os.path.join(
             submit_dir,
-            '{}condor_{}_{}_{}_{}.sub'.format(
+            '{}condor_{}_{}_{}_{}{}.sub'.format(
                 'test_' if test else '',
                 args.particle,
                 args.probe,
                 args.resonance,
-                args.era
+                args.era,
+                '_'+args.condorTag if args.condorTag != '' else ''
             )
         )
         with open(configpath, 'w') as f:

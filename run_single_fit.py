@@ -11,8 +11,9 @@ ROOT.gROOT.LoadMacro('RooCMSShape.cc+')
 
 
 def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
-                version='Nominal', histType='data', shiftType='Nominal', resonance='Z'):
-    
+                version='Nominal', histType='data', shiftType='Nominal', resonance='Z',
+                trig=False):
+
     # Nominal
     if resonance == 'JPsi':
         tnpNomFitSig = [
@@ -44,14 +45,23 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         "Gaussian::sigResPass(x, meanP, sigmaP)",
         "Gaussian::sigResFail(x, meanF, sigmaF)",
         ]
-        tnpNomFitBkg = [
-            "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
-            "gammaP[0.1, -2, 2]", "peakP[91.0]",
-            "acmsF[60., 50., 190.]", "betaF[0.05, 0.01, 0.08]",
-            "gammaF[0.1, -2, 2]", "peakF[91.0]",
-            "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
-            "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
-        ]
+        # Exponential is the nominal bkg shape for trigger SFs
+        if trig:
+            tnpNomFitBkg = [
+                "alphaP[-0.1,-1,0.1]",
+                "alphaF[-0.1,-1,0.1]",
+                "Exponential::bkgPass(x, alphaP)",
+                "Exponential::bkgFail(x, alphaF)",
+            ]
+        else:
+            tnpNomFitBkg = [
+                "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
+                "gammaP[0.1, -2, 2]", "peakP[91.0]",
+                "acmsF[60., 50., 190.]", "betaF[0.05, 0.01, 0.08]",
+                "gammaF[0.1, -2, 2]", "peakF[91.0]",
+                "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+                "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+            ]
 
     # NominalOld
     tnpNomFitOldSig = [
@@ -114,12 +124,22 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
     ]
 
     # AltBkg
-    tnpAltBkgFit = [
-        "alphaP[0., -5., 5.]",
-        "alphaF[0., -5., 5.]",
-        "Exponential::bkgPass(x, alphaP)",
-        "Exponential::bkgFail(x, alphaF)",
-    ]
+    if trig:
+        tnpAltBkgFit = [
+            "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
+            "gammaP[0.1, -2, 2]", "peakP[91.0]",
+            "acmsF[60., 50., 190.]", "betaF[0.05, 0.01, 0.08]",
+            "gammaF[0.1, -2, 2]", "peakF[91.0]",
+            "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+            "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+        ]
+    else:
+        tnpAltBkgFit = [
+            "alphaP[0., -5., 5.]",
+            "alphaF[0., -5., 5.]",
+            "Exponential::bkgPass(x, alphaP)",
+            "Exponential::bkgFail(x, alphaF)",
+        ]
 
     tnpWorkspace = []
     doTemplate = True
@@ -142,14 +162,25 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         tnpWorkspace.extend(tnpAltBkgFit)
 
     def rebin(hP, hF):
-        if shiftType == 'massBinUp':
-            pass  # no rebin, bin widths are 0.25 GeV
-        elif shiftType == 'massBinDown':
-            hP = hP.Rebin(4)  # 1.0 GeV bins
-            hF = hF.Rebin(4)  # 1.0 GeV bins
+        if trig:
+            if shiftType == 'massBinUp':
+                hP = hP.Rebin(4)  # 1.0 GeV bins
+                hF = hF.Rebin(4)  # 1.0 GeV bins
+            elif shiftType == 'massBinDown':
+                hP = hP.Rebin(8)  # 2.0 GeV bins
+                hF = hF.Rebin(8)  # 2.0 GeV bins
+            else:
+                hP = hP.Rebin(6)  # 1.5 GeV bins
+                hF = hF.Rebin(6)  # 1.5 GeV bins
         else:
-            hP = hP.Rebin(2)  # 0.5 GeV bins
-            hF = hF.Rebin(2)  # 0.5 GeV bins
+            if shiftType == 'massBinUp':
+                pass  # no rebin, bin widths are 0.25 GeV
+            elif shiftType == 'massBinDown':
+                hP = hP.Rebin(4)  # 1.0 GeV bins
+                hF = hF.Rebin(4)  # 1.0 GeV bins
+            else:
+                hP = hP.Rebin(2)  # 0.5 GeV bins
+                hF = hF.Rebin(2)  # 0.5 GeV bins
         return hP, hF
 
     # init fitter
