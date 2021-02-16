@@ -124,7 +124,7 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
     ]
 
     # AltBkg
-    if effType = 'trig':
+    if effType=='trig':
         tnpAltBkgFit = [
             "acmsP[60., 50., 190.]", "betaP[0.05, 0.01, 0.08]",
             "gammaP[0.1, -2, 2]", "peakP[91.0]",
