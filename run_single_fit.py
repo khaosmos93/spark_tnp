@@ -48,8 +48,8 @@ def hist_fitter(outFName, inFName, binName, templateFName, plotDir,
         # Exponential is the nominal bkg shape for trigger SFs
         if effType=='trig':
             tnpNomFitBkg = [
-                "alphaP[-0.1,-1,0.1]",
-                "alphaF[-0.1,-1,0.1]",
+                "alphaP[-0.1, -5., 5.]",
+                "alphaF[-0.1, -5., 5.]",
                 "Exponential::bkgPass(x, alphaP)",
                 "Exponential::bkgFail(x, alphaF)",
             ]
