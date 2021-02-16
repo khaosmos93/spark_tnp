@@ -59,6 +59,9 @@ class TagAndProbeFitter:
         if fMax is None:
             self._fitRangeMax = self._fit_range_max
 
+        self._fitRangeMin = fMin
+        self._fitRangeMax = fMax
+
     def set_histograms(self, hPass, hFail, peak=None):
         if peak is None:
             peak = self._peak
