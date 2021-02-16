@@ -143,7 +143,7 @@ def get_weighted_dataframe(df, doGen, resonance, era, subEra, shift=None):
        # M.Oh: temporary solution for missing true PU branch in the new ntuples
        if 'pair_truePileUp' in df.columns:
            weightedDF = df.withColumn(
-               'weight', mapping_expr.getItem(F.col('pair_truePileUp')))
+               'weight', mapping_expr.getItem(F.round('pair_truePileUp')))
        elif 'nVertices' in df.columns:
            weightedDF = df.withColumn(
                'weight', mapping_expr.getItem(F.col('nVertices')))
