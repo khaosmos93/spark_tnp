@@ -572,8 +572,8 @@ def prepare(baseDir, particle, probe, resonance, era,
     libname = 'correctionlib.schemav1'
     if libname in sys.modules:
         schemav1 = sys.modules[libname]
-    elif importlib.util.find_spec(libname) is not None:
-        spec = importlib.util.find_spec(libname)
+    elif importlib.util.find_spec('schemav1', 'correctionlib') is not None:
+        spec = importlib.util.find_spec('schemav1', 'correctionlib')
         schemav1 = importlib.util.module_from_spec(spec)
         sys.modules[libname] = schemav1
         spec.loader.exec_module(schemav1)
