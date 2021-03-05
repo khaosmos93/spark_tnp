@@ -12,7 +12,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
 from registry import registry
-from dataset_allowed_definitions import get_allowed_sub_eras
+from dataset_allowed_definitions import get_allowed_sub_eras, get_data_mc_sub_eras
 from muon_definitions import (get_miniIso_dataframe,
                               get_weighted_dataframe,
                               get_binned_dataframe,
@@ -230,9 +230,16 @@ def run_all(spark, particle, probe, resonance, era,
             config, shift='Nominal', **kwargs):
     # data only option
     dataOnly = kwargs.pop('dataOnly', False)
-    subEras = get_allowed_sub_eras(resonance, era)
+    # flatten each sub-era if True
+    bySubEraAlso = kwargs.pop('bySubEraAlso', False)
+    if bySubEraAlso:
+        subEras = get_allowed_sub_eras(resonance, era)
+    else:
+        subEras = get_data_mc_sub_eras(resonance, era)
     for subEra in subEras:
-        if dataOnly and subEra not in era:
+        if subEra==None:
+            continue
+        if dataOnly and 'Run201' not in subEra:
             continue
         run_flattening(spark, particle, probe, resonance, era, subEra,
                        config, shift, **kwargs)

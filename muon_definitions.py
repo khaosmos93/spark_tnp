@@ -140,8 +140,18 @@ def get_weighted_dataframe(df, doGen, resonance, era, subEra, shift=None):
        pileupMap = {e: r for e, r in zip(pileup_edges[:-1], pileup_ratio)}
        mapping_expr = F.create_map(
            [F.lit(x) for x in itertools.chain(*pileupMap.items())])
-       weightedDF = df.withColumn(
-           'weight', mapping_expr.getItem(F.col('nVertices')))
+       # M.Oh: temporary solution for missing true PU branch in the new ntuples
+       if 'pair_truePileUp' in df.columns:
+           weightedDF = df.withColumn(
+               'weight', mapping_expr.getItem(F.round('pair_truePileUp')))
+       elif 'nTrueInteractions' in df.columns:
+           weightedDF = df.withColumn(
+               'weight', mapping_expr.getItem(F.round('nTrueInteractions')))
+       elif 'nVertices' in df.columns:
+           weightedDF = df.withColumn(
+               'weight', mapping_expr.getItem(F.col('nVertices')))
+       else:
+           weightedDF = df.withColumn('weight', F.lit(1.0))
    else:
        weightedDF = df.withColumn('weight', F.lit(1.0))
    weightedDF = weightedDF.withColumn(

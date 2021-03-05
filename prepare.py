@@ -304,6 +304,7 @@ def prepare(baseDir, particle, probe, resonance, era,
     lumi = registry.luminosity(particle, probe, resonance, era, subEra)
     hists = {}
 
+    effType = config.type() if 'type' in config else ''
     effName = get_eff_name(num, denom)
     extEffName = get_extended_eff_name(num, denom, variableLabels)
     binning = config.binning()
@@ -349,7 +350,8 @@ def prepare(baseDir, particle, probe, resonance, era,
     histList_syst = {
         'combined_syst': hist.Clone(extEffName+'_combined_syst'),
     }
-    histList_syst['combined_syst'].GetZaxis().SetTitle('Uncertainty')
+    if nVars == 2:
+        histList_syst['combined_syst'].GetZaxis().SetTitle('Uncertainty')
 
     hist_dataEff = hist.Clone(extEffName+'_efficiencyData')
     if nVars == 1:
@@ -362,7 +364,8 @@ def prepare(baseDir, particle, probe, resonance, era,
         'combined_syst': hist_dataEff.Clone(
             extEffName+'_efficiencyData_combined_syst'),
     }
-    histList_dataEff_syst['combined_syst'].GetZaxis().SetTitle('Uncertainty')
+    if nVars == 2:
+        histList_dataEff_syst['combined_syst'].GetZaxis().SetTitle('Uncertainty')
     hist_mcEff = hist_dataEff.Clone(extEffName+'_efficiencyMC')
     hist_mcEff_stat = hist_dataEff.Clone(extEffName+'_efficiencyMC_stat')
     hist_mcEff_syst = hist_dataEff.Clone(extEffName+'_efficiencyMC_syst')
@@ -370,26 +373,30 @@ def prepare(baseDir, particle, probe, resonance, era,
         'combined_syst': hist_dataEff.Clone(
             extEffName+'_efficiencyMC_combined_syst'),
     }
-    histList_mcEff_syst['combined_syst'].GetZaxis().SetTitle('Uncertainty')
+    if nVars == 2:
+        histList_mcEff_syst['combined_syst'].GetZaxis().SetTitle('Uncertainty')
 
     # the individual systematics
     for iSyst in itertools.chain(systList['SF']['fitTypes'],
                                  systList['SF']['shiftTypes']):
         histList_syst[iSyst] = hist.Clone(extEffName+'_'+iSyst)
         histList_syst[iSyst+'_syst'] = hist.Clone(extEffName+'_'+iSyst+'_syst')
-        histList_syst[iSyst+'_syst'].GetZaxis().SetTitle('Uncertainty')
+        if nVars == 2:
+            histList_syst[iSyst+'_syst'].GetZaxis().SetTitle('Uncertainty')
     for iSyst in itertools.chain(systList['dataEff']['fitTypes'],
                                  systList['dataEff']['shiftTypes']):
         histList_dataEff_syst[iSyst] = hist_dataEff.Clone(extEffName+'_'+iSyst)
         histList_dataEff_syst[iSyst+'_syst'] = hist_dataEff.Clone(
             extEffName+'_'+iSyst+'_syst')
-        histList_dataEff_syst[iSyst+'_syst'].GetZaxis().SetTitle('Uncertainty')
+        if nVars == 2:
+            histList_dataEff_syst[iSyst+'_syst'].GetZaxis().SetTitle('Uncertainty')
     for iSyst in itertools.chain(systList['mcEff']['fitTypes'],
                                  systList['mcEff']['shiftTypes']):
         histList_mcEff_syst[iSyst] = hist_mcEff.Clone(extEffName+'_'+iSyst)
         histList_mcEff_syst[iSyst+'_syst'] = hist_mcEff.Clone(
             extEffName+'_'+iSyst+'_syst')
-        histList_mcEff_syst[iSyst+'_syst'].GetZaxis().SetTitle('Uncertainty')
+        if nVars == 2:
+            histList_mcEff_syst[iSyst+'_syst'].GetZaxis().SetTitle('Uncertainty')
 
     varName = get_variables_name(variableLabels)
 
@@ -629,7 +636,20 @@ def prepare(baseDir, particle, probe, resonance, era,
     for h in sorted(hists):
         hists[h].Write(h)
 
-        if nVars == 2 and not skipPlots:
+        if skipPlots:
+            continue
+
+        def setLog(canvas, hist, thr = 110.):
+            if hist.GetXaxis().GetBinLowEdge(hist.GetXaxis().GetNbins()) > thr:
+                hist.GetXaxis().SetMoreLogLabels()
+                canvas.SetLogx()
+            if hist.GetYaxis().GetBinLowEdge(hist.GetYaxis().GetNbins()) > thr:
+                hist.GetYaxis().SetMoreLogLabels()
+                canvas.SetLogy()
+            if hist.GetZaxis().GetBinLowEdge(hist.GetZaxis().GetNbins()) > thr:
+                canvas.SetLogz()
+
+        if nVars == 2:
             cName = 'c' + h
             canvas = ROOT.TCanvas(cName, cName, 1000, 800)
             ROOT.gStyle.SetPaintTextFormat("5.3f")
@@ -645,9 +665,70 @@ def prepare(baseDir, particle, probe, resonance, era,
             CMS_lumi.lumi_13TeV = "%0.1f fb^{-1}" % (lumi)
             CMS_lumi.CMS_lumi(canvas, 4, 0)
 
+            if effType == 'trig':
+                setLog(canvas, hists[h])
+
             canvas.Print('{}.png'.format(plotPath))
             canvas.Print('{}.pdf'.format(plotPath))
             canvas.Print('{}.root'.format(plotPath))
+
+        elif nVars == 3:
+            axes = [hists[h].GetXaxis(),
+                    hists[h].GetYaxis(),
+                    hists[h].GetZaxis()]
+            axislabels = ['x', 'y', 'z']
+
+            def zAxisTitle(effName):
+                for iSyst in itertools.chain(systList['SF']['fitTypes'],
+                                             systList['SF']['shiftTypes'],
+                                             systList['dataEff']['fitTypes'],
+                                             systList['dataEff']['shiftTypes'],
+                                             systList['mcEff']['fitTypes'],
+                                             systList['mcEff']['shiftTypes']):
+                    if effName.endswith(iSyst+'_syst'):
+                        return 'Uncertainty'
+
+                if effName.endswith('combined_syst'):
+                    return 'Uncertainty'
+                elif 'efficiency' in effName:
+                    return 'Efficiency'
+                else:
+                    return 'Scalefactor'
+
+            for vi, variableLabel in enumerate(variableLabels):
+                # if there are more than 2 bins, skip this variable
+                if len(binning[variableLabel]) > 3:
+                    continue
+
+                projOpt = 'zyxe'.replace(axislabels[vi], '')
+                for ibin in range(1, len(binning[variableLabel])):
+                    axes[vi].SetRange(ibin, ibin)
+                    projEffName = h.replace(variableLabel, variableLabel+'_{}'.format(ibin))
+                    hist_proj = hists[h].Project3D(projOpt).Clone(projEffName)
+
+                    hist_proj.GetZaxis().SetTitle(zAxisTitle(projEffName))
+
+                    cName = 'c' + projEffName
+                    canvas = ROOT.TCanvas(cName, cName, 1000, 800)
+                    ROOT.gStyle.SetPaintTextFormat("5.3f")
+                    canvas.SetRightMargin(0.24)
+                    hist_proj.Draw('colz text')
+                    plotPath = os.path.join(plotDir, projEffName)
+                    canvas.Modified()
+                    canvas.Update()
+
+                    CMS_lumi.cmsText = 'CMS'
+                    CMS_lumi.writeExtraText = True
+                    CMS_lumi.extraText = 'Preliminary'
+                    CMS_lumi.lumi_13TeV = "%0.1f fb^{-1}" % (lumi)
+                    CMS_lumi.CMS_lumi(canvas, 4, 0)
+
+                    if effType == 'trig':
+                        setLog(canvas, hist_proj)
+
+                    canvas.Print('{}.png'.format(plotPath))
+                    canvas.Print('{}.pdf'.format(plotPath))
+                    canvas.Print('{}.root'.format(plotPath))
 
     tfile.Close()
 
@@ -707,9 +788,13 @@ def prepare(baseDir, particle, probe, resonance, era,
         mg.Draw('AP0')
         mg.GetXaxis().SetTitle(xlabel)
         if xRange:
+            mg.GetXaxis().SetLimits(*xRange)
             mg.GetXaxis().SetRangeUser(*xRange)
         mg.GetYaxis().SetTitle(ylabel)
-        mg.GetYaxis().SetRangeUser(0.8, 1.10)
+        if effType == 'trig':
+            mg.GetYaxis().SetRangeUser(0.6, 1.20)
+        else:
+            mg.GetYaxis().SetRangeUser(0.8, 1.10)
         legend = ROOT.TLegend(0.5, 0.70, 0.92, 0.92)
         legend.SetTextFont(42)
         legend.SetBorderSize(0)
@@ -738,9 +823,18 @@ def prepare(baseDir, particle, probe, resonance, era,
         CMS_lumi.lumi_13TeV = "%0.1f fb^{-1}" % (lumi)
         CMS_lumi.CMS_lumi(canvas, 4, 11)
 
+        canvas.Modified()
+        canvas.Update()
         canvas.Print('{}.png'.format(savename))
         canvas.Print('{}.pdf'.format(savename))
         canvas.Print('{}.root'.format(savename))
+
+        # save each graph
+        tfile = ROOT.TFile('{}.root'.format(savename), 'update')
+        for gi in range(ng):
+            graphs[gi].SetTitle(labels[gi])
+            graphs[gi].Write('g_{}_{}'.format(gi, labels[gi]))
+        tfile.Close()
 
     # enumerate over the axis/variable to plot
     axes = [hists[extEffName].GetXaxis(),
