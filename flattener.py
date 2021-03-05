@@ -239,8 +239,7 @@ def run_all(spark, particle, probe, resonance, era,
     for subEra in subEras:
         if subEra==None:
             continue
-        # M.Oh: unsure whether dataOnly option is properly working...
-        if dataOnly and subEra not in era:
+        if dataOnly and 'Run201' not in subEra:
             continue
         run_flattening(spark, particle, probe, resonance, era, subEra,
                        config, shift, **kwargs)
