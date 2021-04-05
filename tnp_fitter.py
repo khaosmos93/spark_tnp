@@ -134,6 +134,13 @@ def add_common_era(parser):
     parser.add_argument('era', choices=allowed,
                         help='Scale factor set to produce')
 
+
+def add_common_data_tier(parser):
+    allowed = ['AOD', 'MiniAOD']
+    parser.add_argument('dataTier', choices=allowed,
+                        help='Data-tier of underlying ntuples')
+
+
 def add_common_sub_era(parser):
     a_rs = get_allowed_resonances()
     a_sub = []
@@ -154,6 +161,8 @@ def add_common_config(parser):
 def add_common_options(parser):
     parser.add_argument('--baseDir', default='',
                         help='Working directory')
+    parser.add_argument('--usePOGSpace', action='store_true',
+                        help='Use POG central space instead of user')
 
 
 def parse_command_line(argv):
@@ -169,6 +178,7 @@ def parse_command_line(argv):
     add_common_particle(parser_convert)
     add_common_resonance(parser_convert)
     add_common_era(parser_convert)
+    add_common_data_tier(parser_convert)
     add_common_sub_era(parser_convert)
     add_common_options(parser_convert)
 
@@ -240,7 +250,7 @@ def main(argv=None):
 
     if args.command == 'convert':
         from converter import run_all
-        run_all(args.particle, args.resonance, args.era, args.subEra)
+        run_all(args.particle, args.resonance, args.era, args.dataTier, args.subEra, '', args.usePOGSpace)
         return 0
     elif args.command == 'flatten':
         from flattener import run_spark

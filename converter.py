@@ -7,7 +7,7 @@ from registry import registry
 from dataset_allowed_definitions import get_allowed_sub_eras
 
 
-def run_convert(spark, particle, resonance, era, subEra, customDir=''):
+def run_convert(spark, particle, resonance, era, dataTier, subEra, customDir='', use_pog_space=False):
     '''
     Converts a directory of root files into parquet
     '''
@@ -15,10 +15,16 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
     # fnames = registry.root(particle, probe, resonance, era, subEra)
     # fnames = ['root://eosuser' + f for f in fnames]
     
-    baseDir = os.path.join(
-        '/hdfs/analytix.cern.ch/user',
-        getpass.getuser(), customDir, 'root',
-        particle, resonance, era, subEra
+    if use_pog_space == False:
+        baseDir = os.path.join(
+            '/hdfs/analytix.cern.ch/user',
+            getpass.getuser(), customDir, 'root',
+            particle, resonance, era, dataTier, subEra
+            )
+    else:
+        baseDir = os.path.join(
+            '/hdfs/analytix.cern.ch/cms/muon_pog/root',
+            particle, resonance, era, dataTier, subEra,
         )
     
     print(f'Path to convert from: {baseDir}')
@@ -27,8 +33,13 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
     fnames = [f.replace('/hdfs/analytix.cern.ch',
                         'hdfs://analytix') for f in fnames]
     
-    outDir = os.path.join('parquet', customDir, particle, resonance, era, subEra)     
+    if use_pog_space == True:
+        outDir = os.path.join('hdfs://analytix/cms/muon_pog', 'parquet', customDir, particle, resonance, era, dataTier, subEra)
+    else:
+        outDir = os.path.join('parquet', customDir, particle, resonance, era, dataTier, subEra)
     outname = os.path.join(outDir, 'tnp.parquet')
+
+    print(f'Output path: {outname}')
     
     # treename = 'tpTree/fitter_tree'
     # treename = 'muon/tree'
@@ -43,7 +54,7 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
     print(f'First file: {fnames[0]}')
 
     # process batchsize files at a time
-    batchsize = 250
+    batchsize = 100
     new = True
     while fnames:
         current = fnames[:batchsize]
@@ -53,8 +64,9 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
                          .option('tree', treename)\
                          .load(current)
         # temporary fix for duplicate column names in L3 filter
-        rootfiles = rootfiles.drop('probe_hltL3fLMu7p5TrackL3Filtered7p5')\
-                             .drop('tag_hltL3fLMu7p5TrackL3Filtered7p5')
+        # (uncomment if getting errors related to these columns --> means old parquet file)
+        # rootfiles = rootfiles.drop('probe_hltL3fLMu7p5TrackL3Filtered7p5')\
+                            #  .drop('tag_hltL3fLMu7p5TrackL3Filtered7p5')
         
         # merge rootfiles. chosen to make files of 8-32 MB (input)
         # become at most 1 GB (parquet recommendation)
@@ -69,7 +81,7 @@ def run_convert(spark, particle, resonance, era, subEra, customDir=''):
                      .parquet(outname)
 
 
-def run_all(particle, resonance, era, subEra=None, customDir=''):
+def run_all(particle, resonance, era, dataTier, subEra=None, customDir='', use_pog_space=False):
 
     if subEra is not None:
         subEras = [subEra]
@@ -101,6 +113,6 @@ def run_all(particle, resonance, era, subEra=None, customDir=''):
 
     for subEra in subEras:
         print('\nConverting:', particle, resonance, era, subEra)
-        run_convert(spark, particle, resonance, era, subEra, customDir)
+        run_convert(spark, particle, resonance, era, dataTier, subEra, customDir, use_pog_space)
 
     spark.stop()
