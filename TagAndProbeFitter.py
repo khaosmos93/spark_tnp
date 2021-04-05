@@ -16,9 +16,9 @@ class TagAndProbeFitter:
         if resonance == 'Z':
             self._peak = 90
             self._fit_var_min = 60
-            self._fit_var_max = 140
+            self._fit_var_max = 120
             self._fit_range_min = 70
-            self._fit_range_max = 130
+            self._fit_range_max = 110
         elif resonance == 'JPsi':
             self._peak = 3.10
             self._fit_var_min = 2.80
@@ -42,7 +42,6 @@ class TagAndProbeFitter:
             vMin = self._fit_var_min
         if vMax is None:
             vMax = self._fit_var_max
-            
         self._fitVar = v
         self._fitVarMin = vMin
         self._fitVarMax = vMax
@@ -55,13 +54,11 @@ class TagAndProbeFitter:
 
     def set_fit_range(self, fMin=None, fMax=None):
         if fMin is None:
-            self._fitRangeMin = self._fit_range_min
-        else:
-            self._fitRangeMin = fMin
+            fMin = self._fit_range_min
         if fMax is None:
-            self._fitRangeMax = self._fit_range_max
-        else:
-            self._fitRangeMax = fMax
+            fMax = self._fit_range_max
+        self._fitRangeMin = fMin
+        self._fitRangeMax = fMax
 
     def set_histograms(self, hPass, hFail, peak=None):
         if peak is None:
