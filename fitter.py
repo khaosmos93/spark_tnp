@@ -168,6 +168,7 @@ def build_fit_jobs(particle, probe, resonance, era,
                                            'fits_data',
                                            outType, effName)
                     if doData and process(outFName):
+                        os.makedirs(os.path.dirname(outFName), exist_ok=True)
                         _jobs += [(outFName, inFName, binName, templateFName,
                                    plotDir, fitType, 'data', shiftType, resonance, effType)]
                     
@@ -192,6 +193,7 @@ def build_fit_jobs(particle, probe, resonance, era,
                     #   NominalOld, AltSigOld
                     if doMC and process(outFName) and\
                             fitType in ['NominalOld', 'AltSigOld']:
+                        os.makedirs(os.path.dirname(outFName), exist_ok=True)
                         _jobs += [(outFName, inFName, binName, templateFName,
                                    plotDir, fitType, 'mc', shiftType, resonance, effType)]
                         
