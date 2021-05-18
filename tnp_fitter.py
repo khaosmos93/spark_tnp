@@ -163,6 +163,8 @@ def add_common_options(parser):
                         help='Working directory')
     parser.add_argument('--usePOGSpace', action='store_true',
                         help='Use POG central space instead of user')
+    parser.add_argument('--useLocalSpark', action='store_true',
+                        help='Use local spark master for tests')
 
 
 def parse_command_line(argv):
@@ -250,7 +252,7 @@ def main(argv=None):
 
     if args.command == 'convert':
         from converter import run_all
-        run_all(args.particle, args.resonance, args.era, args.dataTier, args.subEra, '', args.usePOGSpace)
+        run_all(args.particle, args.resonance, args.era, args.dataTier, args.subEra, '', args.baseDir, args.usePOGSpace, args.useLocalSpark)
         return 0
     elif args.command == 'flatten':
         from flattener import run_spark
