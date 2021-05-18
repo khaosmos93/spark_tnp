@@ -13,7 +13,7 @@ you need to request access to the cluster in the help document found [here](http
 The following will produce a set of example efficiencies (assuming you can run on analytix) (assuming Git version > 2.13):
 
 ```bash
-git clone --recurse-submodules https://gitlab.cern.ch/cms-muonPOG/spark_tnp.git
+git clone https://gitlab.cern.ch/cms-muonPOG/spark_tnp.git
 cd spark_tnp
 source env.sh
 kinit
@@ -32,13 +32,13 @@ These notebooks use [https://swan.cern.ch](https://swan.cern.ch) to connect to t
 
 There are a couple of ways you can run. Either connect to the hadoop cluster edge nodes or directly on lxplus.
 
-**Update (January 2021):** It is highly recommended to use the edge nodes because they mount both eos and hdfs filesystems as fuse-style mounts. This means one can move files easily from eos (e.g. flat ROOT ntuples produced with the [MuonAnalyzer package](https://gitlab.cern.ch/cms-muonPOG/muonanalysis-muonanalyzer/)) to hdfs using standard `cp` and `mv` commands, and tab completion is enabled. To move files on lxplus, dedicated `hdfs dfs` commands are needed instead (still doable, just not convenient). Note that if you do work on the edge nodes you will need to briefly get back to lxplus to submit fitting condor jobs (see below), since the edge nodes do not have condor set up.
+**Update (January 2021):** It is highly recommended to use the edge nodes because they create fuse mountpoints for both eos and hdfs filesystems. This means one can move files easily from eos (e.g. flat ROOT ntuples produced with the [MuonAnalyzer package](https://gitlab.cern.ch/cms-muonPOG/muonanalysis-muonanalyzer/)) to hdfs using standard `cp` and `mv` commands, and tab completion is enabled. To move files on lxplus, dedicated `hdfs dfs` commands are needed instead (still doable, just not very convenient). Note that if you do work on the edge nodes you will need to briefly get back to lxplus to submit fitting condor jobs (see below), since the edge nodes do not set up condor.
 
 The flattening jobs are run on spark clusters and the data is read from an hdfs cluster. The fitting jobs are still run on condor since they depend on ROOT libraries. The default (and preferred) way to run flattening jobs is to use the `analytix` spark and hdfs cluster.
 
 ### Edge node
 
-Connect to the hadoop edge node (from within the CERN network, e.g. connect first to lxplus and then to the edge node):
+Connect to the hadoop edge node (from within the CERN network, e.g. connect first to lxplus and then to the edge node or use a VPN):
 
 ```bash
 ssh it-hadoop-client
@@ -48,7 +48,7 @@ Setup the environment:
 
 ```bash
 kinit
-source env-edge-node.sh
+source env.sh
 ```
 
 ### LXPLUS
@@ -63,7 +63,7 @@ Setup the environment:
 
 ```bash
 kinit
-source env-lxplus.sh
+source env.sh
 ```
 
 **Note**: Do not forget to make sure you have a valid kerberos token with `kinit`.
@@ -73,7 +73,7 @@ source env-lxplus.sh
 To produce the new common schema jsons recommended by xPOG in addition to the classic style jsons, an additional library ([correctionlib]((https://github.com/nsmith-/correctionlib))) is needed:
 
 ```bash
-pip install --user correctionlib==1.1
+pip install --user correctionlib==2.0.0rc4
 ```
 
 ### Optional
@@ -106,7 +106,7 @@ See detailed documentation in the [configs](configs) directory.
 
 New tag-and-probe datasets will need to be registered in the [data](data) directory.
 
-### Conversion to parquet
+### 2. Conversion to parquet
 
 The conversion to parquet vastly speeds up the later steps.
 We will use [laurelin](https://github.com/spark-root/laurelin) to
@@ -121,12 +121,12 @@ Conversion with `analytix` requires you to first copy your root files
 to `hdfs://analytix`. There is an issue with reading root files from `eos`
 on `analytix` that needs to be understood.
 
-**Update (January 2021):** Using `analyix` is the recommended way to convert root files to parquet. Using the tips above to connect to the edge node and move files using the fuse mount makes the process much smoother.
+**Update (January 2021):** Using `analyix` is the recommended way to convert root files to parquet. The tips above to connect to the edge node and move files using the fuse mount makes the process much smoother.
 
 The following should be executed when you are connected to the edge node:
 
 ```bash
-cp /eos/user/$U/$USER/[path-to-files]/*.root /hdfs/analytix.cern.ch/user/$USER/[path-to-out-dir]
+cp /eos/user/[u]/[user]/[path-to-files]/*.root /hdfs/analytix.cern.ch/user/[user]/[path-to-out-dir]
 ```
 
 or
@@ -135,7 +135,7 @@ or
 cp /eos/cms/store/[path-to-files]/*.root /hdfs/analytix.cern.ch/cms/muon_pog/[path-to-out-dir]
 ```
 
-depending on where your files are and your access level.
+depending on where your files are located and your access level.
 
 If on lxplus, use `hdfs` commands to copy the files (note the slightly different syntax):
 
@@ -143,7 +143,9 @@ If on lxplus, use `hdfs` commands to copy the files (note the slightly different
 hdfs dfs -cp root://eoscms.cern.ch//eos/cms/store/[path-to-files]/*.root hdfs://analytix/[path-to-out-dir]
 ```
 
-**Optimizing ROOT file sizes to work with spark**
+<details><summary>Optimizing ROOT file sizes to work with spark (click to expand) </summary>
+
+**Update (May 2021):** Our ntuples have grown considerably in size with the latest developments. Hadding the files now can choke spark so keeping the output files separate is probably the safest way to go, even if not the absolute optimal in terms of speed. The instructions below are kept for reference only.
 
 Spark works best with a few large-ish files (1 GB) as opposed to lots of small files (few MBs), which are produced by CRAB. Before converting to parquet, it is recommended to check the CRAB output file sizes of your ntuples and if they're very small to hadd them into a few large root files. A script `hadd_by_size.sh` exists in scripts/ to automatically convert a folder of small ROOT files into equisized 1 GB files. The syntax is:
 
@@ -153,7 +155,9 @@ Spark works best with a few large-ish files (1 GB) as opposed to lots of small f
 
 This will produce several files named `haddOut_$num_$UUID.root` in the local directory, each approximately 1 GB in size. These files can then be transferred to `hdfs` to be converted into parquet. Note this step is not required but it is recommended for speed up gains later on.
 
-Additionally, you will need to download the `jar` files to add
+</details>
+
+You also will need to download the `jar` files to add
 to the spark executors:
 
 ```bash
@@ -166,11 +170,7 @@ Once copied, you can use:
 ./tnp_fitter.py convert [particle] [resonance] [era] [[subera]]
 ```
 
-~~**Note:** this will currently raise a `NotImplemented` exception.
-You can look at [converter.py](converter.py) for how to run things
-until it is incorporated.~~
-
-**Update (January 2021):** Conversion has now been implemented in ./tnp_fitter. By default the converter looks for root files in
+By default the converter looks for root files in
 
 ```
 /hdfs/analytix.cern.ch/user/[user]/root/[particle]/[resonance]/[era]/[subera]/
@@ -182,9 +182,9 @@ though a custom directory can be specified. The output parquet files will be pla
 /hdfs/analytix.cern.ch/user/[user]/parquet/[particle]/[resonance]/[era]/[subera]/tnp.parquet
 ``` 
 
-Any new datasets must be registered in registry.py following instructions [here](data/README.md).
+Any new datasets must be registered in `registry.py` following instructions [here](data/README.md).
 
-### Flatten histograms with spark
+### 3. Flatten histograms with spark
 
 This step uses the converted parquet data format to efficiently aggregate
 the efficiency data into binned histograms.
@@ -222,13 +222,15 @@ and
 
 which can be safely ignored.
 
-### Fit histograms
+### 4. Fit histograms
 
 Histogram fitting uses local running or condor.
 
-**Note:** the first time you run a fit it will compile the Root classes. Don't use `-j` option the first time you run fits.
+~~**Note:** the first time you run a fit it will compile the Root classes. Don't use `-j` option the first time you run fits.
 It will try to compile the modules multiple times and throw errors. Instead, use single core to run one fit, then ctrl-c and use the `-j` option
-(it won't compile again).
+(it won't compile again).~~
+
+**(Update May 2021):** This extra compilation step shouldn't be needed anymore. Instead the fitting functions are compiled the first time the repository is sourced.
 
 To run locally (with 16 threads):
 ```bash
@@ -261,7 +263,7 @@ are still being implemented.
 
 **Note:** this recovery procedure simply looks for missing job output files in the fit directory, and runs the missing jobs again locally. If you are re-running your pipeline (e.g. after fixing some mistake in the config) using the same basedir, old fit jobs might still be located in that directory and so this simple recovery procedure won't detect the condor job failures. Additionally, you will end up with a mix of new and old fits in the folder. To avoid this, it's safer to erase the relevant folders before re-running (or choosing a new basedir).
 
-### Extract scale factors
+### 5. Extract scale factors
 
 Plots and scale factors can the be extracted with:
 
