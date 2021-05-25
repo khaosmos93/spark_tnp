@@ -247,11 +247,16 @@ def run_all(spark, particle, probe, resonance, era,
 
 def run_spark(particle, probe, resonance, era, config, **kwargs):
     _shiftType = kwargs.pop('shiftType', [])
+    _useLocalSpark = kwargs.pop('useLocalSpark', False)
 
     spark = SparkSession\
         .builder\
         .appName("TnP")\
-        .getOrCreate()
+
+    if _useLocalSpark == True:
+        spark = spark.master("local")
+
+    spark.getOrCreate()
 
     sc = spark.sparkContext
     print(sc.getConf().toDebugString())

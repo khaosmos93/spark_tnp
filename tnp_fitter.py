@@ -260,7 +260,7 @@ def main(argv=None):
                   Configuration(args.config),
                   numerator=args.numerator, denominator=args.denominator,
                   shiftType=args.shiftType, baseDir=baseDir,
-                  dataOnly=args.dataOnly, bySubEraAlso=args.bySubEraAlso)
+                  dataOnly=args.dataOnly, bySubEraAlso=args.bySubEraAlso, useLocalSpark=args.useLocalSpark)
         return 0
     elif args.command == 'fit':
         from fitter import run_single_fit, build_fit_jobs, build_condor_submit
