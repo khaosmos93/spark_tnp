@@ -251,12 +251,12 @@ def run_spark(particle, probe, resonance, era, config, **kwargs):
 
     spark = SparkSession\
         .builder\
-        .appName("TnP")\
+        .appName("TnP")
 
     if _useLocalSpark == True:
         spark = spark.master("local")
 
-    spark.getOrCreate()
+    spark = spark.getOrCreate()
 
     sc = spark.sparkContext
     print(sc.getConf().toDebugString())
