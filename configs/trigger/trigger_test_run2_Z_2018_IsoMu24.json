@@ -1,0 +1,56 @@
+{
+    "type": "trig",
+    "efficiencies": [
+        ["IsoMu24", "CutBasedIdTight_and_PFIsoTight"],
+        ["IsoMu24", "CutBasedIdTight_and_PFIsoTight_L1SingleMu22"]
+    ],
+    "selection": "probe_pt > 26 and tag_isTight == 1 and tag_hltL3crIsoL1sSingleMu22L1f0L2f10QL3f24QL3trkIsoFiltered0p07==1 and tag_pt > 26 and tag_abseta < 2.4 and pair_dR > 0.3",
+    "definitions": {
+        "CutBasedIdTight_and_PFIsoTight": "probe_CutBasedIdTight == 1 and probe_PFIsoTight == 1",
+        "CutBasedIdTight_and_PFIsoTight_L1SingleMu22": "probe_CutBasedIdTight == 1 and probe_PFIsoTight == 1 and l1ptByQ >= 22 and l1qByQ == 12 and l1drByQ < 0.3",
+        "IsoMu24": "probe_hltL3crIsoL1sSingleMu22L1f0L2f10QL3f24QL3trkIsoFiltered0p07==1",
+        "probe_abseta": "abs(probe_eta)",
+        "tag_abseta": "abs(tag_eta)"
+    },
+    "binning": {
+        "pt": [26, 30, 40, 50, 60, 120, 200],
+        "abseta": [0, 0.9, 1.2, 2.1, 2.4],
+        "eta": [-2.4, -2.1, -1.2, -0.9, 0, 0.9, 1.2, 2.1, 2.4],
+        "charge": [-2,0,2],
+        "nvtx": "np.array(range(0,30+1))*2 + 0.5",
+        "mass": "np.array(range(60*4, 140*4+1)) * 0.25",
+        "mcMass": "np.array(range(60*4, 140*4+1)) * 0.25"
+    },
+    "variables": {
+        "pt": {"variable": "probe_pt", "pretty": "p_{T} (GeV)"},
+        "abseta": {"variable": "probe_abseta", "pretty": "|#eta|"},
+        "eta": {"variable": "probe_eta", "pretty": "#eta"},
+        "charge": {"variable": "probe_charge", "pretty": "charge"},
+        "nvtx": {"variable": "nvertices", "pretty": "Number of primary vertices"},
+        "mass": {"variable": "pair_mass", "pretty": "m(#mu#mu) (GeV)"},
+        "mcMass": {"variable": "pair_mass", "pretty": "m(#mu#mu) (GeV)"}
+    },
+    "fitVariable": "mass",
+    "fitVariableGen": "mcMass",
+    "binVariables": [
+        ["abseta", "pt"]
+    ],
+    "shifts": {
+    },
+    "fitShifts": {
+    },
+    "systematics" : {
+        "SF": {
+            "fitTypes": [],
+            "shiftTypes": []
+        },
+        "dataEff": {
+            "fitTypes": [],
+            "shiftTypes": []
+        },
+        "mcEff": {
+            "fitTypes": [],
+            "shiftTypes": []
+        }
+    }
+}
