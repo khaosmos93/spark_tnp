@@ -7,14 +7,15 @@ if [[ "$HOSTNAME" == *"ithdp"* ]]; then
   echo "Sourcing hadoop edge node environment..."
   source hadoop-setconf.sh analytix
   echo "Done!"
-elif [[ "$HOSTNAME" == *"lxplus"* ]]; then
+# elif [[ "$HOSTNAME" == *"lxplus"* ]]; then
+else
   # lxplus
   echo "Sourcing lxplus environment..."
   source /cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/hadoop-swan-setconf.sh analytix
   echo "Done!"
-else
-  echo "ERROR setting up environment! Environment can only be lxplus or the CERN hadoop edge nodes. See README for more details"
-  exit 1
+# else
+#   echo "ERROR setting up environment! Environment can only be lxplus or the CERN hadoop edge nodes. See README for more details"
+#   exit 1
 fi
 
 # Compile the Roofit fitting function if it doesn't exist yet
