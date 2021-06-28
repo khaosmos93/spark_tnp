@@ -28,7 +28,7 @@
         "charge": {"variable": "probe_charge", "pretty": "charge"},
         "nvtx": {"variable": "nvertices", "pretty": "Number of primary vertices"},
         "mass": {"variable": "pair_mass", "pretty": "m(#mu#mu) (GeV)"},
-        "mcMass": {"variable": "pair_mass", "pretty": "m(#mu#mu) (GeV)"}
+        "mcMass": {"variable": "genMassFSfromHP", "pretty": "m(#mu#mu) (GeV)"}
     },
     "fitVariable": "mass",
     "fitVariableGen": "mcMass",
